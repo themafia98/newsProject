@@ -323,10 +323,10 @@ function () {
   }, {
     key: "showContact",
     value: function showContact() {
+      this.content.innerHTML = '';
       var titleState = document.createElement('h2');
       titleState.classList.add('state-title');
       titleState.innerHTML = 'Contact';
-      this.content.innerHTML = '';
       var aboutWrapper = document.createElement('div');
       aboutWrapper.classList.add('aboutWrapper');
       var aboutArticle = document.createElement('p');

@@ -253,11 +253,11 @@ class ViewNews {
 
     showContact(){
 
+        this.content.innerHTML = '';
+
         let titleState = document.createElement('h2');
         titleState.classList.add('state-title');
         titleState.innerHTML = 'Contact';
-        this.content.innerHTML = '';
-
 
         let aboutWrapper = document.createElement('div');
         aboutWrapper.classList.add('aboutWrapper');
