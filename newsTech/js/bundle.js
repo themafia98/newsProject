@@ -187,6 +187,8 @@ function () {
         article.appendChild(content);
         article.appendChild(read);
         this.newsSection[num].appendChild(article);
+        debugger;
+        console.log(article);
         if (i % 3 === 0 || i === 0) num++;
       }
 
@@ -293,7 +295,11 @@ function () {
         article.appendChild(img);
         article.appendChild(content);
         article.appendChild(read);
-        if (!this.newsSection[num] && this.lengthLoading > 0) this.newsSection[num] = document.createElement('section');
+
+        if (this.lengthLoading > 0) {
+          !this.newsSection[num] && (this.newsSection[num] = document.createElement('section'));
+        }
+
         this.newsSection[num].appendChild(article);
         if (i % 3 === 0) num++;
       }
@@ -357,6 +363,21 @@ function () {
       this.content.appendChild(titleState);
       this.content.appendChild(aboutWrapper);
       this.content.appendChild(map);
+      this.mapInit();
+    }
+  }, {
+    key: "mapInit",
+    value: function mapInit() {
+      new ol.Map({
+        target: 'map',
+        layers: [new ol.layer.Tile({
+          source: new ol.source.OSM()
+        })],
+        view: new ol.View({
+          center: ol.proj.fromLonLat([28, 54]),
+          zoom: 7
+        })
+      });
     }
   }, {
     key: "showLoader",

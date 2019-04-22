@@ -80,12 +80,14 @@ class ViewNews {
                 article.appendChild(content);
                 article.appendChild(read);
                 this.newsSection[num].appendChild(article);
+                debugger;
+                console.log(article);
                 if ((i % 3 === 0) || i === 0) num++;
 
                 }
 
             for (let ij = 7; ij < this.newsSection.length-1; ij++){
-                
+
                 let parent = target.parentNode;
                 contentSection.insertBefore(this.newsSection[ij],parent);
 
@@ -213,8 +215,11 @@ class ViewNews {
             article.appendChild(content);
             article.appendChild(read);
 
+            if (this.lengthLoading > 0){
 
-            if (!this.newsSection[num] && this.lengthLoading > 0) this.newsSection[num] = document.createElement('section');
+                !(this.newsSection[num]) && (this.newsSection[num] = document.createElement('section'));
+            }
+
             this.newsSection[num].appendChild(article);
             if (i % 3 === 0) num++;
         }
@@ -287,7 +292,26 @@ class ViewNews {
         this.content.appendChild(aboutWrapper);
         this.content.appendChild(map);
 
+        this.mapInit();
     }
+
+    mapInit(){
+
+        
+        new ol.Map({
+            target: 'map',
+            layers: [
+              new ol.layer.Tile({
+                source: new ol.source.OSM()
+              })
+            ],
+            view: new ol.View({
+              center: ol.proj.fromLonLat([28,54]),
+              zoom: 7
+            })
+          });
+    }
+    
 
 
     showLoader(){
