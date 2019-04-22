@@ -43,6 +43,7 @@ function () {
     this.type = type;
     this.country = "country=".concat(lang);
     this.buffer = false;
+    this.correctUTF = [];
   }
 
   _createClass(News, [{
@@ -54,6 +55,7 @@ function () {
         return response.json();
       }).then(function (response) {
         if (localStorage.news) {
+          _this.correctUTF = [];
           _this.buffer = JSON.parse(localStorage.news);
           var filterNews = response.articles.filter(function (item, i) {
             var its = _this.buffer.find(function (it) {
@@ -62,13 +64,16 @@ function () {
 
             return its === undefined;
           });
-          console.log(filterNews);
-          if (filterNews.length) filterNews.forEach(function (element) {
-            _this.buffer.unshift(element);
+          filterNews.length && filterNews.forEach(function (element) {
+            return _this.buffer.unshift(element);
           });
+          var findItem = _this.buffer || response.articles;
+          _this.correctUTF = findItem.filter(function (item) {
+            return item.source.name != 'Rg.ru';
+          });
+          localStorage.news = JSON.stringify(_this.correctUTF);
         }
 
-        _this.buffer != false ? localStorage.news = JSON.stringify(_this.buffer) : localStorage.news = JSON.stringify(response.articles);
         sessionStorage.state = window.location.hash.slice(2);
         pages.currentState = sessionStorage.state;
         view.showNews();
@@ -126,7 +131,9 @@ function () {
       nav: null,
       wrapperHeader: null,
       navigator: null,
-      title: null
+      title: null,
+      footerWrapper: null,
+      footerPower: null
     };
   }
 
@@ -149,12 +156,9 @@ function () {
       var contentSection = document.querySelector('.content');
       lastSection = lastSection[lastSection.length - 1];
       var num = this.newsSection.length - 1;
-      console.log(this.news);
-      console.log(this.newsSection);
       this.newContent = this.news.filter(function (element, i) {
         return i > _this2.numContent;
       });
-      console.log(this.newContent);
       var countArticle = Math.ceil(this.countShow / 3);
 
       for (var j = 0; j < countArticle; j++) {
@@ -162,7 +166,10 @@ function () {
         this.newsSection.push(section);
       }
 
-      for (var i = 0; i < this.countShow - 1; i++) {
+      debugger;
+      var length = this.newContent.length > this.countShow ? this.countShow - 1 : this.newContent.length;
+
+      for (var i = 0; i < length; i++) {
         var read = document.createElement('a');
         var article = document.createElement('div');
         var img = document.createElement('img');
@@ -212,6 +219,11 @@ function () {
       this.components.title = document.createElement('h1');
       this.components.title.innerHTML = 'Technology news';
       this.components.title.classList.add('title');
+      this.components.footerWrapper = document.createElement('div');
+      this.components.footerWrapper.classList.add('footerWrapper');
+      this.components.footerPower = document.createElement('p');
+      this.components.footerPower.classList.add('footerWrapper__powerd');
+      this.components.footerPower.innerHTML = 'Create by themafia98 (Pavel P)';
 
       for (var i = 0; i < 3; i++) {
         var li = document.createElement('li');
@@ -224,8 +236,10 @@ function () {
       }
 
       this.components.nav.appendChild(this.components.navigator);
+      this.components.footerWrapper.appendChild(this.components.footerPower);
       this.components.wrapperHeader.appendChild(this.components.title);
       this.components.wrapperHeader.appendChild(this.components.nav);
+      this.components.footer.appendChild(this.components.footerWrapper);
       this.components.header.appendChild(this.components.wrapperHeader);
       this.ctx.appendChild(this.components.header);
       this.ctx.appendChild(this.components.contentSection);
@@ -333,7 +347,7 @@ function () {
       aboutArticle.classList.add('contact-links');
       aboutArticle.innerHTML = '<a href = "https://github.com/themafia98"><i class="fab fa-github-square"></i></a>' + ' <a href = "https://www.linkedin.com/in/pavel-p-80887b151/"><i class="fab fa-linkedin"></i></a>';
       var map = document.createElement('div');
-      map.classList.add('map');
+      map.setAttribute('id', 'map');
       aboutWrapper.appendChild(aboutArticle);
       this.content.appendChild(titleState);
       this.content.appendChild(aboutWrapper);
@@ -377,7 +391,6 @@ function () {
       document.addEventListener('scroll', function (e) {
         _this4.menu = document.getElementsByTagName('nav')[0];
         var scrolled = window.pageYOffset || document.documentElement.scrollTop;
-        console.log(scrolled);
 
         if (scrolled > 100) {
           _this4.menu.classList.add('fixed-menu');

@@ -1,8 +1,9 @@
 
 
+
 let app = (function(){
-    
-    
+
+
     function main(){
 
         const pages = new Pages();

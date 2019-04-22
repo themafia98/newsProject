@@ -22,8 +22,9 @@ class ViewNews {
             nav: null,
             wrapperHeader: null,
             navigator: null,
-            title: null
-
+            title: null,
+            footerWrapper: null,
+            footerPower: null,
         }
     }
 
@@ -43,28 +44,24 @@ class ViewNews {
             let contentSection = document.querySelector('.content');
             lastSection = lastSection[lastSection.length-1];
             let num = this.newsSection.length-1;
-
-            console.log(this.news);
-            console.log(this.newsSection);
-
             this.newContent = this.news.filter( (element,i) => i > this.numContent);
-            console.log(this.newContent);
-            
+
             let countArticle = Math.ceil(this.countShow / 3);
 
             for(let j = 0; j < countArticle; j++){
                 let section = document.createElement('section');
                 this.newsSection.push(section);
             }
+debugger;
+            let length = this.newContent.length > this.countShow ? this.countShow-1 : this.newContent.length;
 
-            for(let i = 0; i < this.countShow-1; i++){
+            for(let i = 0; i < length; i++){
 
                 let read = document.createElement('a');
-    
                 let article = document.createElement('div');
                 let img = document.createElement('img');
-                
-                img.src = this.newContent[i].urlToImage ? this.newContent[i].urlToImage : 'img/technology.jpg';
+
+                img.src = this.newContent[i].urlToImage  ? this.newContent[i].urlToImage : 'img/technology.jpg';
                 img.classList.add('topic-image');
                 let content = document.createElement('p');
 
@@ -83,10 +80,9 @@ class ViewNews {
                 article.appendChild(read);
                 this.newsSection[num].appendChild(article);
                 if ((i % 3 === 0) || i === 0) num++;
-                }
-    
 
-            
+                }
+
             for (let ij = 7; ij < this.newsSection.length-1; ij++){
                 
                 let parent = target.parentNode;
@@ -129,6 +125,12 @@ class ViewNews {
         this.components.title.innerHTML = 'Technology news';
         this.components.title.classList.add('title');
 
+        this.components.footerWrapper = document.createElement('div');
+        this.components.footerWrapper.classList.add('footerWrapper');
+        this.components.footerPower = document.createElement('p');
+        this.components.footerPower.classList.add('footerWrapper__powerd');
+        this.components.footerPower.innerHTML = 'Create by themafia98 (Pavel P)';
+
 
         for (let i = 0; i < 3; i++){
 
@@ -142,9 +144,12 @@ class ViewNews {
         }
         
         this.components.nav.appendChild(this.components.navigator);
+        this.components.footerWrapper.appendChild(this.components.footerPower);
 
         this.components.wrapperHeader.appendChild(this.components.title);
         this.components.wrapperHeader.appendChild(this.components.nav);
+
+        this.components.footer.appendChild(this.components.footerWrapper);
 
         
         this.components.header.appendChild(this.components.wrapperHeader);
@@ -268,7 +273,7 @@ class ViewNews {
                                  ' <a href = "https://www.linkedin.com/in/pavel-p-80887b151/"><i class="fab fa-linkedin"></i></a>';
 
         let map = document.createElement('div');
-        map.classList.add('map');
+        map.setAttribute('id','map');
 
         aboutWrapper.appendChild(aboutArticle);
 

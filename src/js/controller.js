@@ -15,7 +15,6 @@ class Controller {
             
             this.menu = document.getElementsByTagName('nav')[0];
             let scrolled = window.pageYOffset || document.documentElement.scrollTop;
-            console.log(scrolled);
 
             if (scrolled > 100) {
                 
