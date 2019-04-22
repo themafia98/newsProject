@@ -11,6 +11,7 @@ class ViewNews {
         this.numPage = 1;
         this.countShow = 18;
         this.numContent = 18; // start
+        this.lengthLoading = 0;
 
 
         this.components = {
@@ -52,10 +53,10 @@ class ViewNews {
                 let section = document.createElement('section');
                 this.newsSection.push(section);
             }
-debugger;
-            let length = this.newContent.length > this.countShow ? this.countShow-1 : this.newContent.length;
+;
+            this.lengthLoading = this.newContent.length > this.countShow ? this.countShow-1 : this.newContent.length;
 
-            for(let i = 0; i < length; i++){
+            for(let i = 0; i < this.lengthLoading; i++){
 
                 let read = document.createElement('a');
                 let article = document.createElement('div');
@@ -178,8 +179,10 @@ debugger;
             let section = document.createElement('section');
             this.newsSection.push(section);
         }
+        ;
+        let length = this.countShow + this.lengthLoading;
 
-        for(let i = 0; i < this.countShow; i++){
+        for(let i = 0; i < length; i++){
     
             let read = document.createElement('a');
 
@@ -209,6 +212,9 @@ debugger;
             article.appendChild(img);
             article.appendChild(content);
             article.appendChild(read);
+
+
+            if (!this.newsSection[num] && this.lengthLoading > 0) this.newsSection[num] = document.createElement('section');
             this.newsSection[num].appendChild(article);
             if (i % 3 === 0) num++;
         }

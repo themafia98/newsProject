@@ -122,6 +122,7 @@ function () {
     this.countShow = 18;
     this.numContent = 18; // start
 
+    this.lengthLoading = 0;
     this.components = {
       header: null,
       footer: null,
@@ -166,10 +167,10 @@ function () {
         this.newsSection.push(section);
       }
 
-      debugger;
-      var length = this.newContent.length > this.countShow ? this.countShow - 1 : this.newContent.length;
+      ;
+      this.lengthLoading = this.newContent.length > this.countShow ? this.countShow - 1 : this.newContent.length;
 
-      for (var i = 0; i < length; i++) {
+      for (var i = 0; i < this.lengthLoading; i++) {
         var read = document.createElement('a');
         var article = document.createElement('div');
         var img = document.createElement('img');
@@ -262,7 +263,10 @@ function () {
         this.newsSection.push(section);
       }
 
-      for (var i = 0; i < this.countShow; i++) {
+      ;
+      var length = this.countShow + this.lengthLoading;
+
+      for (var i = 0; i < length; i++) {
         var read = document.createElement('a');
         var article = document.createElement('div');
         var img = document.createElement('img');
@@ -289,6 +293,7 @@ function () {
         article.appendChild(img);
         article.appendChild(content);
         article.appendChild(read);
+        if (!this.newsSection[num] && this.lengthLoading > 0) this.newsSection[num] = document.createElement('section');
         this.newsSection[num].appendChild(article);
         if (i % 3 === 0) num++;
       }
