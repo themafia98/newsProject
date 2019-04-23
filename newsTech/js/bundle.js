@@ -51,6 +51,12 @@ function () {
     value: function request(view, pages) {
       var _this = this;
 
+      if (!window.fetch) {
+        view.customElements(document.querySelector('.loader'), 'delete');
+        view.updateBroswer();
+        return;
+      }
+
       fetch("".concat(this.URI + this.type, "?").concat(this.country, "&category=").concat(this.CATEGORY, "&apiKey=").concat(this.KEY)).then(function (response) {
         return response.json();
       }).then(function (response) {
@@ -139,12 +145,21 @@ function () {
   }
 
   _createClass(ViewNews, [{
+    key: "updateBroswer",
+    value: function updateBroswer() {
+      var content = document.querySelector('.content');
+      var support = document.createElement('h2');
+      support.classList.add('updateIE');
+      support.innerHTML = "Please update browser or if you use IE download a modern browser.";
+      content.appendChild(support);
+    }
+  }, {
     key: "customElements",
     value: function customElements(target) {
       var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'none';
       var name = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'Спрятать';
       type === 'disabled' && target.setAttribute('disabled', 'true');
-      type === 'delete' && target.remove();
+      type === 'delete' && target.parentNode.removeChild(target);
       type === 'rename' && (target.value = name);
     }
   }, {
@@ -187,7 +202,6 @@ function () {
         article.appendChild(content);
         article.appendChild(read);
         this.newsSection[num].appendChild(article);
-        debugger;
         console.log(article);
         if (i % 3 === 0 || i === 0) num++;
       }
@@ -200,11 +214,10 @@ function () {
       this.numContent = this.numContent + 18;
     }
   }, {
-    key: "showComponents",
-    value: function showComponents() {
-      this.ctx.innerHTML = '';
-      this.components.header = document.createElement('header');
-      this.components.footer = document.createElement('footer');
+    key: "showLoadingButton",
+    value: function showLoadingButton() {
+      this.components.loadMoreBox = document.createElement('div');
+      this.components.loadMoreBox.classList.add('controllSection');
       this.components.loadMoreBox = document.createElement('div');
       this.components.loadMoreBox.classList.add('controllSection');
       this.components.loadingNews = document.createElement('input');
@@ -212,6 +225,13 @@ function () {
       this.components.loadingNews.classList.add('loadingNewsBtn');
       this.components.loadingNews.value = 'Загрузить';
       this.components.loadMoreBox.appendChild(this.components.loadingNews);
+    }
+  }, {
+    key: "showComponents",
+    value: function showComponents() {
+      this.ctx.innerHTML = '';
+      this.components.header = document.createElement('header');
+      this.components.footer = document.createElement('footer');
       this.components.contentSection = document.createElement('div');
       this.components.contentSection.classList.add('content');
       this.components.nav = document.createElement('nav');
@@ -238,6 +258,7 @@ function () {
         this.components.navigator.appendChild(li);
       }
 
+      this.showLoadingButton();
       this.components.nav.appendChild(this.components.navigator);
       this.components.footerWrapper.appendChild(this.components.footerPower);
       this.components.wrapperHeader.appendChild(this.components.title);
@@ -256,6 +277,14 @@ function () {
 
       this.content.innerHTML = '';
       this.newsSection = [];
+
+      if (this.lengthLoading >= 18) {
+        debugger;
+        this.numContent = 18;
+        this.lengthLoading = 0;
+        this.showLoadingButton();
+      }
+
       localStorage.news ? this.news = JSON.parse(localStorage.news) : this.news = [];
       var countArticle = Math.ceil(this.countShow / 3);
       var num = 0;
@@ -315,7 +344,10 @@ function () {
     value: function checkState(pages) {
       pages.currentState === 'about' && this.showAbout();
       pages.currentState === 'contact' && this.showContact();
-      (pages.currentState === 'main' || '') && this.showNews();
+
+      if (pages.currentState === 'main' || '') {
+        this.showNews();
+      }
     }
   }, {
     key: "showAbout",

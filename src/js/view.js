@@ -29,11 +29,23 @@ class ViewNews {
         }
     }
 
+    updateBroswer(){
+
+        let content = document.querySelector('.content');
+
+        let support = document.createElement('h2');
+        support.classList.add('updateIE');
+
+        support.innerHTML = "Please update browser or if you use IE download a modern browser.";
+        content.appendChild(support);
+        
+    }
+
     customElements(target,type = 'none',name = 'Спрятать') {
         
 
         type === 'disabled' && target.setAttribute('disabled','true');
-        type === 'delete' && target.remove();
+        type === 'delete' && target.parentNode.removeChild(target);
         type === 'rename' && (target.value = name);
 
     }
@@ -80,7 +92,7 @@ class ViewNews {
                 article.appendChild(content);
                 article.appendChild(read);
                 this.newsSection[num].appendChild(article);
-                debugger;
+                
                 console.log(article);
                 if ((i % 3 === 0) || i === 0) num++;
 
@@ -97,13 +109,10 @@ class ViewNews {
     }
 
 
-    showComponents(){
-        
+    showLoadingButton(){
 
-        this.ctx.innerHTML = '';
-
-        this.components.header = document.createElement('header');
-        this.components.footer = document.createElement('footer');
+        this.components.loadMoreBox = document.createElement('div');
+        this.components.loadMoreBox.classList.add('controllSection');
 
         this.components.loadMoreBox = document.createElement('div');
         this.components.loadMoreBox.classList.add('controllSection');
@@ -114,6 +123,16 @@ class ViewNews {
         this.components.loadingNews.value = 'Загрузить';
 
         this.components.loadMoreBox.appendChild(this.components.loadingNews);
+    }
+
+
+    showComponents(){
+        
+
+        this.ctx.innerHTML = '';
+
+        this.components.header = document.createElement('header');
+        this.components.footer = document.createElement('footer');
 
         this.components.contentSection = document.createElement('div');
         this.components.contentSection.classList.add('content');
@@ -146,6 +165,9 @@ class ViewNews {
             this.components.navigator.appendChild(li);
         }
         
+
+        this.showLoadingButton();
+
         this.components.nav.appendChild(this.components.navigator);
         this.components.footerWrapper.appendChild(this.components.footerPower);
 
@@ -169,6 +191,14 @@ class ViewNews {
         
         this.content.innerHTML = '';
         this.newsSection = [];
+
+        if (this.lengthLoading >= 18){
+            debugger;
+            this.numContent = 18;
+            this.lengthLoading = 0;
+            this.showLoadingButton();
+        }
+
         localStorage.news ? this.news = JSON.parse(localStorage.news) : this.news = [];
 
 
@@ -233,7 +263,11 @@ class ViewNews {
 
         (pages.currentState === 'about') && this.showAbout();
         (pages.currentState === 'contact') && this.showContact();
-        (pages.currentState === 'main' || '') && this.showNews();
+        if (pages.currentState === 'main' || '') {
+            
+            this.showNews();
+
+        }
     }
 
     showAbout() {
@@ -311,7 +345,7 @@ class ViewNews {
             })
           });
     }
-    
+
 
 
     showLoader(){

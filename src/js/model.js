@@ -33,6 +33,13 @@ class News {
 
     request(view,pages){
         
+        if(!window.fetch) {
+
+            view.customElements(document.querySelector('.loader'),'delete');
+            view.updateBroswer();
+            return;
+        }
+
         fetch(`${this.URI+this.type}?${this.country}&category=${this.CATEGORY}&apiKey=${this.KEY}`)
 
         .then(response => response.json())
