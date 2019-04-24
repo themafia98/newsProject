@@ -8,8 +8,8 @@ let app = (function(){
 
         const pages = new Pages();
         const news = new News();
-
-
+        news.getCoords();
+        
         const view = new ViewNews(document.getElementById('newsApp'));
         const controll = new Controller();
         controll.setEvents(view,news,pages);

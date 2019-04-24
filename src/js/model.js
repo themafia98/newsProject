@@ -33,39 +33,36 @@ class News {
 
     getCoords(){
 
-        fetch('https://get.geojs.io/v1/ip/geo.json')
-        .then(response => response.json())
-        .then(response => {
+        navigator.geolocation.getCurrentPosition(function success(pos) {
+            let response = pos.coords;
 
             let coords ={
                 latitude: response.latitude,
                 longitude: response.longitude
             }
+
+            console.log(response.latitude);
+            console.log(response.longitude);
+
             localStorage.coords = JSON.stringify(coords);
-        })
-
-        .then (response => this.mapInit())
-
-        .catch (error => {
-            console.log(error);
         });
     }
 
-    mapInit(){
+    static mapInit(mapIn = document.querySelector('.ol-viewport')){
         
-        let coords = JSON.parse(localStorage.coords);
+        if (!mapIn){
 
         let mousePositionControl = new ol.control.MousePosition( {
             // используется градусная проекция
             projection: 'EPSG:4326',
             // переопределяем функцию вывода координат
             coordinateFormat: function(coordinate) {
-                // сначала широта, потом долгота и ограничиваем до 5 знаков после запятой
-                return ol.coordinate.format(coordinate, '{y}, {x}', 5);
+                // сначала широта, потом долгота и ограничиваем до 3 знаков после запятой
+                return ol.coordinate.format(coordinate, '{y}, {x}', 3);
             }
     } );
     
-        let maps = new ol.Map({
+        return new ol.Map({
             controls: ol.control.defaults().extend([
                 new ol.control.ZoomSlider(),
                 mousePositionControl,
@@ -75,18 +72,19 @@ class News {
             target: 'map',
             layers: [
               new ol.layer.Tile({
-                source: new ol.source.XYZ({
-                    url: 'http://{a-c}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png'
+                source: new ol.source.TileArcGISRest({
+                    url: 'http://server.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer'
                 })
               })
             ],
             view: new ol.View({
-              center: ol.proj.fromLonLat([parseInt(coords.longitude),
-                                          parseInt(coords.latitude)]),
+              center: ol.proj.fromLonLat([27.4998984,53.9130256]),
               zoom: 7
             })
           });
-          
+
+        }
+
     }
 
     request(view,pages){
@@ -102,11 +100,11 @@ class News {
 
         .then(response => response.json())
         .then(response => {
+            
 
-            if (localStorage.news){
                 
             this.correctUTF = [];
-            this.buffer = JSON.parse(localStorage.news);
+            this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
             let filterNews =  response.articles.filter( (item,i) =>{
 
             let its = this.buffer.find(it => it.description === item.description);
@@ -121,26 +119,6 @@ class News {
             this.correctUTF = findItem.filter (item => item.source.name != 'Rg.ru');
             localStorage.news = JSON.stringify(this.correctUTF);
 
-            }})
-
-            .then(response => {
-                
-                fetch('https://get.geojs.io/v1/ip/geo.json')
-                .then(response => response.json())
-                .then(response => {
-                    
-                    let coords ={
-                        latitude: response.latitude,
-                        longitude: response.longitude
-                    }
-                    localStorage.coords = JSON.stringify(coords);
-                })
-        
-                .then (response => this.mapInit())
-        
-                .catch (error => {
-                    console.log(error);
-                });
             })
 
             .then(response => {

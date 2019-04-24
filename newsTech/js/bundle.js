@@ -49,53 +49,21 @@ function () {
   _createClass(News, [{
     key: "getCoords",
     value: function getCoords() {
-      var _this = this;
-
-      fetch('https://get.geojs.io/v1/ip/geo.json').then(function (response) {
-        return response.json();
-      }).then(function (response) {
+      navigator.geolocation.getCurrentPosition(function success(pos) {
+        var response = pos.coords;
         var coords = {
           latitude: response.latitude,
           longitude: response.longitude
         };
+        console.log(response.latitude);
+        console.log(response.longitude);
         localStorage.coords = JSON.stringify(coords);
-      }).then(function (response) {
-        return _this.mapInit();
-      })["catch"](function (error) {
-        console.log(error);
-      });
-    }
-  }, {
-    key: "mapInit",
-    value: function mapInit() {
-      var coords = JSON.parse(localStorage.coords);
-      var mousePositionControl = new ol.control.MousePosition({
-        // используется градусная проекция
-        projection: 'EPSG:4326',
-        // переопределяем функцию вывода координат
-        coordinateFormat: function coordinateFormat(coordinate) {
-          // сначала широта, потом долгота и ограничиваем до 5 знаков после запятой
-          return ol.coordinate.format(coordinate, '{y}, {x}', 5);
-        }
-      });
-      var maps = new ol.Map({
-        controls: ol.control.defaults().extend([new ol.control.ZoomSlider(), mousePositionControl, new ol.control.OverviewMap(), new ol.control.ScaleLine()]),
-        target: 'map',
-        layers: [new ol.layer.Tile({
-          source: new ol.source.XYZ({
-            url: 'http://{a-c}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png'
-          })
-        })],
-        view: new ol.View({
-          center: ol.proj.fromLonLat([parseInt(coords.longitude), parseInt(coords.latitude)]),
-          zoom: 7
-        })
       });
     }
   }, {
     key: "request",
     value: function request(view, pages) {
-      var _this2 = this;
+      var _this = this;
 
       if (!window.fetch) {
         view.customElements(document.querySelector('.loader'), 'delete');
@@ -106,39 +74,23 @@ function () {
       fetch("".concat(this.URI + this.type, "?").concat(this.country, "&category=").concat(this.CATEGORY, "&apiKey=").concat(this.KEY)).then(function (response) {
         return response.json();
       }).then(function (response) {
-        if (localStorage.news) {
-          _this2.correctUTF = [];
-          _this2.buffer = JSON.parse(localStorage.news);
-          var filterNews = response.articles.filter(function (item, i) {
-            var its = _this2.buffer.find(function (it) {
-              return it.description === item.description;
-            });
+        _this.correctUTF = [];
+        _this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
+        var filterNews = response.articles.filter(function (item, i) {
+          var its = _this.buffer.find(function (it) {
+            return it.description === item.description;
+          });
 
-            return its === undefined;
-          });
-          filterNews.length && filterNews.forEach(function (element) {
-            return _this2.buffer.unshift(element);
-          });
-          var findItem = _this2.buffer || response.articles;
-          _this2.correctUTF = findItem.filter(function (item) {
-            return item.source.name != 'Rg.ru';
-          });
-          localStorage.news = JSON.stringify(_this2.correctUTF);
-        }
-      }).then(function (response) {
-        fetch('https://get.geojs.io/v1/ip/geo.json').then(function (response) {
-          return response.json();
-        }).then(function (response) {
-          var coords = {
-            latitude: response.latitude,
-            longitude: response.longitude
-          };
-          localStorage.coords = JSON.stringify(coords);
-        }).then(function (response) {
-          return _this2.mapInit();
-        })["catch"](function (error) {
-          console.log(error);
+          return its === undefined;
         });
+        filterNews.length && filterNews.forEach(function (element) {
+          return _this.buffer.unshift(element);
+        });
+        var findItem = _this.buffer || response.articles;
+        _this.correctUTF = findItem.filter(function (item) {
+          return item.source.name != 'Rg.ru';
+        });
+        localStorage.news = JSON.stringify(_this.correctUTF);
       }).then(function (response) {
         sessionStorage.state = window.location.hash.slice(2);
         pages.currentState = sessionStorage.state;
@@ -164,6 +116,36 @@ function () {
     key: "stringifyNews",
     value: function stringifyNews(article) {
       localStorage.news = JSON.stringify(article);
+    }
+  }], [{
+    key: "mapInit",
+    value: function mapInit() {
+      var mapIn = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.querySelector('.ol-viewport');
+
+      if (!mapIn) {
+        var mousePositionControl = new ol.control.MousePosition({
+          // используется градусная проекция
+          projection: 'EPSG:4326',
+          // переопределяем функцию вывода координат
+          coordinateFormat: function coordinateFormat(coordinate) {
+            // сначала широта, потом долгота и ограничиваем до 3 знаков после запятой
+            return ol.coordinate.format(coordinate, '{y}, {x}', 3);
+          }
+        });
+        return new ol.Map({
+          controls: ol.control.defaults().extend([new ol.control.ZoomSlider(), mousePositionControl, new ol.control.OverviewMap(), new ol.control.ScaleLine()]),
+          target: 'map',
+          layers: [new ol.layer.Tile({
+            source: new ol.source.TileArcGISRest({
+              url: 'http://server.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer'
+            })
+          })],
+          view: new ol.View({
+            center: ol.proj.fromLonLat([27.4998984, 53.9130256]),
+            zoom: 7
+          })
+        });
+      }
     }
   }]);
 
@@ -225,7 +207,7 @@ function () {
   }, {
     key: "loadingNews",
     value: function loadingNews() {
-      var _this3 = this;
+      var _this2 = this;
 
       var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var lastSection = document.getElementsByTagName('section');
@@ -233,7 +215,7 @@ function () {
       lastSection = lastSection[lastSection.length - 1];
       var num = this.newsSection.length - 1;
       this.newContent = this.news.filter(function (element, i) {
-        return i > _this3.numContent;
+        return i > _this2.numContent;
       });
       var countArticle = Math.ceil(this.countShow / 3);
 
@@ -333,7 +315,7 @@ function () {
   }, {
     key: "showNews",
     value: function showNews() {
-      var _this4 = this;
+      var _this3 = this;
 
       this.content.innerHTML = '';
       this.newsSection = [];
@@ -393,7 +375,7 @@ function () {
       }
 
       this.newsSection.forEach(function (item) {
-        return _this4.components.contentSection.appendChild(item);
+        return _this3.components.contentSection.appendChild(item);
       });
       this.components.contentSection.appendChild(this.components.loadMoreBox);
       this.ctx.insertBefore(this.components.contentSection, this.components.header.nextSibling);
@@ -454,6 +436,27 @@ function () {
       this.content.appendChild(titleState);
       this.content.appendChild(aboutWrapper);
       this.content.appendChild(map);
+      var maps = News.mapInit();
+      var coords = JSON.parse(localStorage.coords);
+      var mapp = document.querySelector('.ol-viewport');
+      var currentMarker = document.createElement('div');
+      currentMarker.classList.add('markerCurrent');
+      var marker = document.createElement('div');
+      marker.classList.add('marker');
+      mapp.appendChild(currentMarker);
+      mapp.appendChild(marker);
+      var markerYour = new ol.Overlay({
+        position: ol.proj.fromLonLat([coords.longitude, coords.latitude]),
+        element: document.querySelector('.marker'),
+        positioning: 'bottom-center'
+      });
+      maps.addOverlay(markerYour);
+      var markerCurrent = new ol.Overlay({
+        position: ol.proj.fromLonLat([27.4998984, 53.9130256]),
+        element: document.querySelector('.markerCurrent'),
+        positioning: 'bottom-center'
+      });
+      maps.addOverlay(markerCurrent);
     }
   }, {
     key: "showLoader",
@@ -485,19 +488,19 @@ function () {
   _createClass(Controller, [{
     key: "setEvents",
     value: function setEvents(view, model, pages) {
-      var _this5 = this;
+      var _this4 = this;
 
       window.addEventListener('storage', function (e) {
         view.showNews();
       }, false);
       document.addEventListener('scroll', function (e) {
-        _this5.menu = document.getElementsByTagName('nav')[0];
+        _this4.menu = document.getElementsByTagName('nav')[0];
         var scrolled = window.pageYOffset || document.documentElement.scrollTop;
 
         if (scrolled > 100) {
-          _this5.menu.classList.add('fixed-menu');
-        } else if (_this5.menu.classList[0] == 'fixed-menu') {
-          _this5.menu.classList.toggle('fixed-menu');
+          _this4.menu.classList.add('fixed-menu');
+        } else if (_this4.menu.classList[0] == 'fixed-menu') {
+          _this4.menu.classList.toggle('fixed-menu');
         }
       }, false);
       document.addEventListener('click', function (e) {
@@ -536,6 +539,7 @@ var app = function () {
   function main() {
     var pages = new Pages();
     var news = new News();
+    news.getCoords();
     var view = new ViewNews(document.getElementById('newsApp'));
     var controll = new Controller();
     controll.setEvents(view, news, pages);

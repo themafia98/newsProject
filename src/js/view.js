@@ -216,6 +216,7 @@ class ViewNews {
 
         for(let i = 0; i < length; i++){
     
+
             let read = document.createElement('a');
 
             let article = document.createElement('div');
@@ -326,7 +327,36 @@ class ViewNews {
         this.content.appendChild(aboutWrapper);
         this.content.appendChild(map);
 
+        let maps = News.mapInit();
+        let coords = JSON.parse(localStorage.coords);
 
+        let mapp = document.querySelector('.ol-viewport');
+
+        let currentMarker = document.createElement('div');
+        currentMarker.classList.add('markerCurrent');
+
+        let marker = document.createElement('div');
+        marker.classList.add('marker');
+
+        mapp.appendChild(currentMarker);
+        mapp.appendChild(marker);
+
+        let markerYour = new ol.Overlay({
+            position: ol.proj.fromLonLat([coords.longitude,coords.latitude]),
+            element: document.querySelector('.marker'),
+            positioning: 'bottom-center'
+        });
+        maps.addOverlay(markerYour);
+  
+  
+          let markerCurrent = new ol.Overlay({
+            position: ol.proj.fromLonLat([27.4998984,53.9130256]),
+            element: document.querySelector('.markerCurrent'),
+            positioning: 'bottom-center'
+        });
+        maps.addOverlay(markerCurrent);
+
+        
     }
 
 

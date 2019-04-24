@@ -343,6 +343,29 @@ a {
         left: 87%;
 
     }
+
+    .ol-mouse-position {
+        background-color: rgba(0, 60, 136, .4);
+        border-radius: 4px;
+        color: #eee;
+        padding: 1px 5px;
+    }
+
+    .markerCurrent {
+        width: 15px; 
+        height: 15px;
+         background: red;
+         border-radius: 15px;
+
+    }
+
+    .marker {
+        width: 10px; 
+        height: 10px;
+         background: blue;
+         border-radius: 15px;
+
+    }
 }
 
 @import 'media';
