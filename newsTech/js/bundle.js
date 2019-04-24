@@ -47,9 +47,55 @@ function () {
   }
 
   _createClass(News, [{
+    key: "getCoords",
+    value: function getCoords() {
+      var _this = this;
+
+      fetch('https://get.geojs.io/v1/ip/geo.json').then(function (response) {
+        return response.json();
+      }).then(function (response) {
+        var coords = {
+          latitude: response.latitude,
+          longitude: response.longitude
+        };
+        localStorage.coords = JSON.stringify(coords);
+      }).then(function (response) {
+        return _this.mapInit();
+      })["catch"](function (error) {
+        console.log(error);
+      });
+    }
+  }, {
+    key: "mapInit",
+    value: function mapInit() {
+      var coords = JSON.parse(localStorage.coords);
+      var mousePositionControl = new ol.control.MousePosition({
+        // используется градусная проекция
+        projection: 'EPSG:4326',
+        // переопределяем функцию вывода координат
+        coordinateFormat: function coordinateFormat(coordinate) {
+          // сначала широта, потом долгота и ограничиваем до 5 знаков после запятой
+          return ol.coordinate.format(coordinate, '{y}, {x}', 5);
+        }
+      });
+      var maps = new ol.Map({
+        controls: ol.control.defaults().extend([new ol.control.ZoomSlider(), mousePositionControl, new ol.control.OverviewMap(), new ol.control.ScaleLine()]),
+        target: 'map',
+        layers: [new ol.layer.Tile({
+          source: new ol.source.XYZ({
+            url: 'http://{a-c}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png'
+          })
+        })],
+        view: new ol.View({
+          center: ol.proj.fromLonLat([parseInt(coords.longitude), parseInt(coords.latitude)]),
+          zoom: 7
+        })
+      });
+    }
+  }, {
     key: "request",
     value: function request(view, pages) {
-      var _this = this;
+      var _this2 = this;
 
       if (!window.fetch) {
         view.customElements(document.querySelector('.loader'), 'delete');
@@ -61,25 +107,39 @@ function () {
         return response.json();
       }).then(function (response) {
         if (localStorage.news) {
-          _this.correctUTF = [];
-          _this.buffer = JSON.parse(localStorage.news);
+          _this2.correctUTF = [];
+          _this2.buffer = JSON.parse(localStorage.news);
           var filterNews = response.articles.filter(function (item, i) {
-            var its = _this.buffer.find(function (it) {
+            var its = _this2.buffer.find(function (it) {
               return it.description === item.description;
             });
 
             return its === undefined;
           });
           filterNews.length && filterNews.forEach(function (element) {
-            return _this.buffer.unshift(element);
+            return _this2.buffer.unshift(element);
           });
-          var findItem = _this.buffer || response.articles;
-          _this.correctUTF = findItem.filter(function (item) {
+          var findItem = _this2.buffer || response.articles;
+          _this2.correctUTF = findItem.filter(function (item) {
             return item.source.name != 'Rg.ru';
           });
-          localStorage.news = JSON.stringify(_this.correctUTF);
+          localStorage.news = JSON.stringify(_this2.correctUTF);
         }
-
+      }).then(function (response) {
+        fetch('https://get.geojs.io/v1/ip/geo.json').then(function (response) {
+          return response.json();
+        }).then(function (response) {
+          var coords = {
+            latitude: response.latitude,
+            longitude: response.longitude
+          };
+          localStorage.coords = JSON.stringify(coords);
+        }).then(function (response) {
+          return _this2.mapInit();
+        })["catch"](function (error) {
+          console.log(error);
+        });
+      }).then(function (response) {
         sessionStorage.state = window.location.hash.slice(2);
         pages.currentState = sessionStorage.state;
         view.showNews();
@@ -165,7 +225,7 @@ function () {
   }, {
     key: "loadingNews",
     value: function loadingNews() {
-      var _this2 = this;
+      var _this3 = this;
 
       var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var lastSection = document.getElementsByTagName('section');
@@ -173,7 +233,7 @@ function () {
       lastSection = lastSection[lastSection.length - 1];
       var num = this.newsSection.length - 1;
       this.newContent = this.news.filter(function (element, i) {
-        return i > _this2.numContent;
+        return i > _this3.numContent;
       });
       var countArticle = Math.ceil(this.countShow / 3);
 
@@ -273,13 +333,12 @@ function () {
   }, {
     key: "showNews",
     value: function showNews() {
-      var _this3 = this;
+      var _this4 = this;
 
       this.content.innerHTML = '';
       this.newsSection = [];
 
       if (this.lengthLoading >= 18) {
-        debugger;
         this.numContent = 18;
         this.lengthLoading = 0;
         this.showLoadingButton();
@@ -334,7 +393,7 @@ function () {
       }
 
       this.newsSection.forEach(function (item) {
-        return _this3.components.contentSection.appendChild(item);
+        return _this4.components.contentSection.appendChild(item);
       });
       this.components.contentSection.appendChild(this.components.loadMoreBox);
       this.ctx.insertBefore(this.components.contentSection, this.components.header.nextSibling);
@@ -395,21 +454,6 @@ function () {
       this.content.appendChild(titleState);
       this.content.appendChild(aboutWrapper);
       this.content.appendChild(map);
-      this.mapInit();
-    }
-  }, {
-    key: "mapInit",
-    value: function mapInit() {
-      new ol.Map({
-        target: 'map',
-        layers: [new ol.layer.Tile({
-          source: new ol.source.OSM()
-        })],
-        view: new ol.View({
-          center: ol.proj.fromLonLat([28, 54]),
-          zoom: 7
-        })
-      });
     }
   }, {
     key: "showLoader",
@@ -441,19 +485,19 @@ function () {
   _createClass(Controller, [{
     key: "setEvents",
     value: function setEvents(view, model, pages) {
-      var _this4 = this;
+      var _this5 = this;
 
       window.addEventListener('storage', function (e) {
         view.showNews();
       }, false);
       document.addEventListener('scroll', function (e) {
-        _this4.menu = document.getElementsByTagName('nav')[0];
+        _this5.menu = document.getElementsByTagName('nav')[0];
         var scrolled = window.pageYOffset || document.documentElement.scrollTop;
 
         if (scrolled > 100) {
-          _this4.menu.classList.add('fixed-menu');
-        } else if (_this4.menu.classList[0] == 'fixed-menu') {
-          _this4.menu.classList.toggle('fixed-menu');
+          _this5.menu.classList.add('fixed-menu');
+        } else if (_this5.menu.classList[0] == 'fixed-menu') {
+          _this5.menu.classList.toggle('fixed-menu');
         }
       }, false);
       document.addEventListener('click', function (e) {

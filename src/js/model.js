@@ -31,6 +31,64 @@ class News {
         this.correctUTF = [];
     }
 
+    getCoords(){
+
+        fetch('https://get.geojs.io/v1/ip/geo.json')
+        .then(response => response.json())
+        .then(response => {
+
+            let coords ={
+                latitude: response.latitude,
+                longitude: response.longitude
+            }
+            localStorage.coords = JSON.stringify(coords);
+        })
+
+        .then (response => this.mapInit())
+
+        .catch (error => {
+            console.log(error);
+        });
+    }
+
+    mapInit(){
+        
+        let coords = JSON.parse(localStorage.coords);
+
+        let mousePositionControl = new ol.control.MousePosition( {
+            // используется градусная проекция
+            projection: 'EPSG:4326',
+            // переопределяем функцию вывода координат
+            coordinateFormat: function(coordinate) {
+                // сначала широта, потом долгота и ограничиваем до 5 знаков после запятой
+                return ol.coordinate.format(coordinate, '{y}, {x}', 5);
+            }
+    } );
+    
+        let maps = new ol.Map({
+            controls: ol.control.defaults().extend([
+                new ol.control.ZoomSlider(),
+                mousePositionControl,
+                new ol.control.OverviewMap(),
+                new ol.control.ScaleLine()
+            ]),
+            target: 'map',
+            layers: [
+              new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: 'http://{a-c}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png'
+                })
+              })
+            ],
+            view: new ol.View({
+              center: ol.proj.fromLonLat([parseInt(coords.longitude),
+                                          parseInt(coords.latitude)]),
+              zoom: 7
+            })
+          });
+          
+    }
+
     request(view,pages){
         
         if(!window.fetch) {
@@ -63,7 +121,29 @@ class News {
             this.correctUTF = findItem.filter (item => item.source.name != 'Rg.ru');
             localStorage.news = JSON.stringify(this.correctUTF);
 
-            }
+            }})
+
+            .then(response => {
+                
+                fetch('https://get.geojs.io/v1/ip/geo.json')
+                .then(response => response.json())
+                .then(response => {
+                    
+                    let coords ={
+                        latitude: response.latitude,
+                        longitude: response.longitude
+                    }
+                    localStorage.coords = JSON.stringify(coords);
+                })
+        
+                .then (response => this.mapInit())
+        
+                .catch (error => {
+                    console.log(error);
+                });
+            })
+
+            .then(response => {
 
             sessionStorage.state = window.location.hash.slice(2);
             pages.currentState = sessionStorage.state;
@@ -72,6 +152,7 @@ class News {
             view.customElements(document.querySelector('.loader'),'delete');
 
         })
+
         .catch((error) => {
             console.log(error.message);
 
@@ -82,7 +163,7 @@ class News {
             view.checkState(pages);
             view.customElements(document.querySelector('.loader'),'delete');
         });
-    }
+}
 
     parseJsonNews(article = localStorage.news){
 

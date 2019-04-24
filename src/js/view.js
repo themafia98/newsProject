@@ -193,7 +193,7 @@ class ViewNews {
         this.newsSection = [];
 
         if (this.lengthLoading >= 18){
-            debugger;
+            
             this.numContent = 18;
             this.lengthLoading = 0;
             this.showLoadingButton();
@@ -326,25 +326,10 @@ class ViewNews {
         this.content.appendChild(aboutWrapper);
         this.content.appendChild(map);
 
-        this.mapInit();
+
     }
 
-    mapInit(){
 
-        
-        new ol.Map({
-            target: 'map',
-            layers: [
-              new ol.layer.Tile({
-                source: new ol.source.OSM()
-              })
-            ],
-            view: new ol.View({
-              center: ol.proj.fromLonLat([28,54]),
-              zoom: 7
-            })
-          });
-    }
 
 
 
