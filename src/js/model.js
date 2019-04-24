@@ -1,4 +1,5 @@
 
+
 class Pages {
 
     constructor(){
@@ -29,27 +30,43 @@ class News {
         this.country = `country=${lang}`;
         this.buffer = false;
         this.correctUTF = [];
+
+        this.error = null;
     }
 
     getCoords(){
+        
+
+          function error(err) {
+
+            let coords ={
+                latitude: 53.9130256,
+                longitude: 27.4998984,
+                error: true,
+            }
+
+            localStorage.coords = JSON.stringify(coords);
+          };
+
 
         navigator.geolocation.getCurrentPosition(function success(pos) {
             let response = pos.coords;
-
+            
             let coords ={
                 latitude: response.latitude,
-                longitude: response.longitude
+                longitude: response.longitude,
+                error: false,
             }
 
-            console.log(response.latitude);
-            console.log(response.longitude);
 
             localStorage.coords = JSON.stringify(coords);
-        });
+        },error);
+
+
     }
 
     static mapInit(mapIn = document.querySelector('.ol-viewport')){
-        
+
         if (!mapIn){
 
         let mousePositionControl = new ol.control.MousePosition( {
@@ -61,7 +78,7 @@ class News {
                 return ol.coordinate.format(coordinate, '{y}, {x}', 3);
             }
     } );
-    
+
         return new ol.Map({
             controls: ol.control.defaults().extend([
                 new ol.control.ZoomSlider(),
@@ -71,38 +88,31 @@ class News {
             ]),
             target: 'map',
             layers: [
-              new ol.layer.Tile({
-                source: new ol.source.TileArcGISRest({
-                    url: 'http://server.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer'
+                new ol.layer.Tile({
+
+                    source: new ol.source.OSM()
+
                 })
-              })
             ],
             view: new ol.View({
-              center: ol.proj.fromLonLat([27.4998984,53.9130256]),
-              zoom: 7
+            center: ol.proj.fromLonLat([27.4998984,53.9130256]),
+            zoom: 7
             })
-          });
+        });
 
         }
 
     }
 
     request(view,pages){
-        
-        if(!window.fetch) {
 
-            view.customElements(document.querySelector('.loader'),'delete');
-            view.updateBroswer();
-            return;
-        }
+        if (!window.fetch) return false;
 
-        fetch(`${this.URI+this.type}?${this.country}&category=${this.CATEGORY}&apiKey=${this.KEY}`)
+        window.fetch(`${this.URI+this.type}?${this.country}&category=${this.CATEGORY}&apiKey=${this.KEY}`)
 
         .then(response => response.json())
         .then(response => {
-            
 
-                
             this.correctUTF = [];
             this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
             let filterNews =  response.articles.filter( (item,i) =>{
@@ -132,12 +142,10 @@ class News {
         })
 
         .catch((error) => {
-            console.log(error.message);
 
             sessionStorage.state = window.location.hash.slice(2);
             pages.currentState = sessionStorage.state;
             view.showNews();
-            
             view.checkState(pages);
             view.customElements(document.querySelector('.loader'),'delete');
         });
@@ -145,9 +153,9 @@ class News {
 
     parseJsonNews(article = localStorage.news){
 
-    return JSON.parse(article);
+        return article ? JSON.parse(article) : false;
     }
-    
+
     stringifyNews(article){
 
         localStorage.news = JSON.stringify(article);

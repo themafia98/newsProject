@@ -75,9 +75,9 @@
         .src(['src/js/model.js','src/js/view.js','src/js/controller.js', 'src/js/index.js'])
         .pipe(sourcemaps.init())
         .pipe(concat('bundle.js'))
-        .pipe(babel({
-          presets: ['@babel/preset-env']
-       }))
+      //   .pipe(babel({
+      //     presets: ['@babel/preset-env']
+      //  }))
 
         .pipe(sourcemaps.write('.'))
         // .pipe(rigger()) //Прогоним через rigger

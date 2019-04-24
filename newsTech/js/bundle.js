@@ -1,557 +1,670 @@
-"use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+class Pages {
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+    constructor(){
 
-var Pages =
-/*#__PURE__*/
-function () {
-  function Pages() {
-    _classCallCheck(this, Pages);
-
-    this.state = 'index';
-  }
-
-  _createClass(Pages, [{
-    key: "currentState",
-    set: function set(index) {
-      this.state = index;
-    },
-    get: function get() {
-      return this.state;
+        this.state = 'index';
     }
-  }]);
 
-  return Pages;
-}();
+    set currentState(index) {
 
-var News =
-/*#__PURE__*/
-function () {
-  function News() {
-    var type = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'top-headlines';
-    var lang = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'ru';
-
-    _classCallCheck(this, News);
-
-    this.KEY = '92084bd2e2064d8d856eb2c499818785';
-    this.URI = 'https://newsapi.org/v2/';
-    this.CATEGORY = 'technology';
-    this.type = type;
-    this.country = "country=".concat(lang);
-    this.buffer = false;
-    this.correctUTF = [];
-  }
-
-  _createClass(News, [{
-    key: "getCoords",
-    value: function getCoords() {
-      navigator.geolocation.getCurrentPosition(function success(pos) {
-        var response = pos.coords;
-        var coords = {
-          latitude: response.latitude,
-          longitude: response.longitude
-        };
-        console.log(response.latitude);
-        console.log(response.longitude);
-        localStorage.coords = JSON.stringify(coords);
-      });
+        this.state = index;
     }
-  }, {
-    key: "request",
-    value: function request(view, pages) {
-      var _this = this;
 
-      if (!window.fetch) {
-        view.customElements(document.querySelector('.loader'), 'delete');
-        view.updateBroswer();
-        return;
-      }
+    get currentState() {
 
-      fetch("".concat(this.URI + this.type, "?").concat(this.country, "&category=").concat(this.CATEGORY, "&apiKey=").concat(this.KEY)).then(function (response) {
-        return response.json();
-      }).then(function (response) {
-        _this.correctUTF = [];
-        _this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
-        var filterNews = response.articles.filter(function (item, i) {
-          var its = _this.buffer.find(function (it) {
-            return it.description === item.description;
-          });
-
-          return its === undefined;
-        });
-        filterNews.length && filterNews.forEach(function (element) {
-          return _this.buffer.unshift(element);
-        });
-        var findItem = _this.buffer || response.articles;
-        _this.correctUTF = findItem.filter(function (item) {
-          return item.source.name != 'Rg.ru';
-        });
-        localStorage.news = JSON.stringify(_this.correctUTF);
-      }).then(function (response) {
-        sessionStorage.state = window.location.hash.slice(2);
-        pages.currentState = sessionStorage.state;
-        view.showNews();
-        view.checkState(pages);
-        view.customElements(document.querySelector('.loader'), 'delete');
-      })["catch"](function (error) {
-        console.log(error.message);
-        sessionStorage.state = window.location.hash.slice(2);
-        pages.currentState = sessionStorage.state;
-        view.showNews();
-        view.checkState(pages);
-        view.customElements(document.querySelector('.loader'), 'delete');
-      });
+        return this.state;
     }
-  }, {
-    key: "parseJsonNews",
-    value: function parseJsonNews() {
-      var article = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : localStorage.news;
-      return JSON.parse(article);
-    }
-  }, {
-    key: "stringifyNews",
-    value: function stringifyNews(article) {
-      localStorage.news = JSON.stringify(article);
-    }
-  }], [{
-    key: "mapInit",
-    value: function mapInit() {
-      var mapIn = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.querySelector('.ol-viewport');
+}
 
-      if (!mapIn) {
-        var mousePositionControl = new ol.control.MousePosition({
-          // используется градусная проекция
-          projection: 'EPSG:4326',
-          // переопределяем функцию вывода координат
-          coordinateFormat: function coordinateFormat(coordinate) {
-            // сначала широта, потом долгота и ограничиваем до 3 знаков после запятой
-            return ol.coordinate.format(coordinate, '{y}, {x}', 3);
-          }
-        });
+
+class News {
+
+    constructor(type = 'top-headlines',lang = 'ru'){
+
+        this.KEY = '92084bd2e2064d8d856eb2c499818785';
+        this.URI = 'https://newsapi.org/v2/';
+        this.CATEGORY = 'technology';
+        this.type = type;
+        this.country = `country=${lang}`;
+        this.buffer = false;
+        this.correctUTF = [];
+
+        this.error = null;
+    }
+
+    getCoords(){
+        
+
+          function error(err) {
+
+            let coords ={
+                latitude: 53.9130256,
+                longitude: 27.4998984,
+                error: true,
+            }
+
+            localStorage.coords = JSON.stringify(coords);
+          };
+
+
+        navigator.geolocation.getCurrentPosition(function success(pos) {
+            let response = pos.coords;
+            
+            let coords ={
+                latitude: response.latitude,
+                longitude: response.longitude,
+                error: false,
+            }
+
+
+            localStorage.coords = JSON.stringify(coords);
+        },error);
+
+
+    }
+
+    static mapInit(mapIn = document.querySelector('.ol-viewport')){
+
+        if (!mapIn){
+
+        let mousePositionControl = new ol.control.MousePosition( {
+            // используется градусная проекция
+            projection: 'EPSG:4326',
+            // переопределяем функцию вывода координат
+            coordinateFormat: function(coordinate) {
+                // сначала широта, потом долгота и ограничиваем до 3 знаков после запятой
+                return ol.coordinate.format(coordinate, '{y}, {x}', 3);
+            }
+    } );
+
         return new ol.Map({
-          controls: ol.control.defaults().extend([new ol.control.ZoomSlider(), mousePositionControl, new ol.control.OverviewMap(), new ol.control.ScaleLine()]),
-          target: 'map',
-          layers: [new ol.layer.Tile({
-            source: new ol.source.TileArcGISRest({
-              url: 'http://server.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer'
-            })
-          })],
-          view: new ol.View({
-            center: ol.proj.fromLonLat([27.4998984, 53.9130256]),
+            controls: ol.control.defaults().extend([
+                new ol.control.ZoomSlider(),
+                mousePositionControl,
+                new ol.control.OverviewMap(),
+                new ol.control.ScaleLine()
+            ]),
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+
+                    source: new ol.source.OSM()
+
+                })
+            ],
+            view: new ol.View({
+            center: ol.proj.fromLonLat([27.4998984,53.9130256]),
             zoom: 7
-          })
+            })
         });
-      }
+
+        }
+
     }
-  }]);
 
-  return News;
-}();
+    request(view,pages){
 
-var ViewNews =
-/*#__PURE__*/
-function () {
-  function ViewNews() {
-    var ctx = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : document.createElement('div');
+        if (!window.fetch) return false;
 
-    _classCallCheck(this, ViewNews);
+        window.fetch(`${this.URI+this.type}?${this.country}&category=${this.CATEGORY}&apiKey=${this.KEY}`)
 
-    this.ctx = ctx;
-    this.content = null;
-    this.menu = ['main', 'about', 'contact'];
-    this.news = localStorage.news ? JSON.parse(localStorage.news) : [];
-    this.newsSection = [];
-    this.count = 6;
-    this.numPage = 1;
-    this.countShow = 18;
-    this.numContent = 18; // start
+        .then(response => response.json())
+        .then(response => {
 
-    this.lengthLoading = 0;
-    this.components = {
-      header: null,
-      footer: null,
-      loadMoreBox: null,
-      loadingNews: null,
-      contentSection: null,
-      nav: null,
-      wrapperHeader: null,
-      navigator: null,
-      title: null,
-      footerWrapper: null,
-      footerPower: null
-    };
-  }
+            this.correctUTF = [];
+            this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
+            let filterNews =  response.articles.filter( (item,i) =>{
 
-  _createClass(ViewNews, [{
-    key: "updateBroswer",
-    value: function updateBroswer() {
-      var content = document.querySelector('.content');
-      var support = document.createElement('h2');
-      support.classList.add('updateIE');
-      support.innerHTML = "Please update browser or if you use IE download a modern browser.";
-      content.appendChild(support);
+            let its = this.buffer.find(it => it.description === item.description);
+
+            return  its === undefined;
+            });
+
+            filterNews.length && filterNews.forEach(element => this.buffer.unshift(element));
+
+            let findItem = this.buffer || response.articles;
+
+            this.correctUTF = findItem.filter (item => item.source.name != 'Rg.ru');
+            localStorage.news = JSON.stringify(this.correctUTF);
+
+            })
+
+            .then(response => {
+
+            sessionStorage.state = window.location.hash.slice(2);
+            pages.currentState = sessionStorage.state;
+            view.showNews();
+            view.checkState(pages);
+            view.customElements(document.querySelector('.loader'),'delete');
+
+        })
+
+        .catch((error) => {
+
+            sessionStorage.state = window.location.hash.slice(2);
+            pages.currentState = sessionStorage.state;
+            view.showNews();
+            view.checkState(pages);
+            view.customElements(document.querySelector('.loader'),'delete');
+        });
+}
+
+    parseJsonNews(article = localStorage.news){
+
+        return article ? JSON.parse(article) : false;
     }
-  }, {
-    key: "customElements",
-    value: function customElements(target) {
-      var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'none';
-      var name = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'Спрятать';
-      type === 'disabled' && target.setAttribute('disabled', 'true');
-      type === 'delete' && target.parentNode.removeChild(target);
-      type === 'rename' && (target.value = name);
+
+    stringifyNews(article){
+
+        localStorage.news = JSON.stringify(article);
     }
-  }, {
-    key: "loadingNews",
-    value: function loadingNews() {
-      var _this2 = this;
+}
 
-      var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-      var lastSection = document.getElementsByTagName('section');
-      var contentSection = document.querySelector('.content');
-      lastSection = lastSection[lastSection.length - 1];
-      var num = this.newsSection.length - 1;
-      this.newContent = this.news.filter(function (element, i) {
-        return i > _this2.numContent;
-      });
-      var countArticle = Math.ceil(this.countShow / 3);
 
-      for (var j = 0; j < countArticle; j++) {
-        var section = document.createElement('section');
-        this.newsSection.push(section);
-      }
+class ViewNews {
 
-      ;
-      this.lengthLoading = this.newContent.length > this.countShow ? this.countShow - 1 : this.newContent.length;
-
-      for (var i = 0; i < this.lengthLoading; i++) {
-        var read = document.createElement('a');
-        var article = document.createElement('div');
-        var img = document.createElement('img');
-        img.src = this.newContent[i].urlToImage ? this.newContent[i].urlToImage : 'img/technology.jpg';
-        img.classList.add('topic-image');
-        var content = document.createElement('p');
-        content.classList.add('article__content');
-        article.classList.add('article-col');
-        article.classList.add('rel-col');
-        read.href = this.newContent[i].url;
-        read.classList.add('article__content__read');
-        content.innerHTML = this.newContent[i].description != null ? this.newContent[i].description : this.newContent[i].title;
-        article.appendChild(img);
-        article.appendChild(content);
-        article.appendChild(read);
-        this.newsSection[num].appendChild(article);
-        console.log(article);
-        if (i % 3 === 0 || i === 0) num++;
-      }
-
-      for (var ij = 7; ij < this.newsSection.length - 1; ij++) {
-        var parent = target.parentNode;
-        contentSection.insertBefore(this.newsSection[ij], parent);
-      }
-
-      this.numContent = this.numContent + 18;
-    }
-  }, {
-    key: "showLoadingButton",
-    value: function showLoadingButton() {
-      this.components.loadMoreBox = document.createElement('div');
-      this.components.loadMoreBox.classList.add('controllSection');
-      this.components.loadMoreBox = document.createElement('div');
-      this.components.loadMoreBox.classList.add('controllSection');
-      this.components.loadingNews = document.createElement('input');
-      this.components.loadingNews.setAttribute('type', 'button');
-      this.components.loadingNews.classList.add('loadingNewsBtn');
-      this.components.loadingNews.value = 'Загрузить';
-      this.components.loadMoreBox.appendChild(this.components.loadingNews);
-    }
-  }, {
-    key: "showComponents",
-    value: function showComponents() {
-      this.ctx.innerHTML = '';
-      this.components.header = document.createElement('header');
-      this.components.footer = document.createElement('footer');
-      this.components.contentSection = document.createElement('div');
-      this.components.contentSection.classList.add('content');
-      this.components.nav = document.createElement('nav');
-      this.components.wrapperHeader = document.createElement('div');
-      this.components.navigator = document.createElement('ul');
-      this.components.navigator.classList.add('menu');
-      this.components.wrapperHeader.classList.add('row-center');
-      this.components.title = document.createElement('h1');
-      this.components.title.innerHTML = 'Technology news';
-      this.components.title.classList.add('title');
-      this.components.footerWrapper = document.createElement('div');
-      this.components.footerWrapper.classList.add('footerWrapper');
-      this.components.footerPower = document.createElement('p');
-      this.components.footerPower.classList.add('footerWrapper__powerd');
-      this.components.footerPower.innerHTML = 'Create by themafia98 (Pavel P)';
-
-      for (var i = 0; i < 3; i++) {
-        var li = document.createElement('li');
-        var link = document.createElement('a');
-        link.setAttribute('href', "#!".concat(this.menu[i]));
-        link.dataset.menu = this.menu[i];
-        link.innerHTML = this.menu[i];
-        li.appendChild(link);
-        this.components.navigator.appendChild(li);
-      }
-
-      this.showLoadingButton();
-      this.components.nav.appendChild(this.components.navigator);
-      this.components.footerWrapper.appendChild(this.components.footerPower);
-      this.components.wrapperHeader.appendChild(this.components.title);
-      this.components.wrapperHeader.appendChild(this.components.nav);
-      this.components.footer.appendChild(this.components.footerWrapper);
-      this.components.header.appendChild(this.components.wrapperHeader);
-      this.ctx.appendChild(this.components.header);
-      this.ctx.appendChild(this.components.contentSection);
-      this.ctx.appendChild(this.components.footer);
-      this.content = document.querySelector('.content');
-    }
-  }, {
-    key: "showNews",
-    value: function showNews() {
-      var _this3 = this;
-
-      this.content.innerHTML = '';
-      this.newsSection = [];
-
-      if (this.lengthLoading >= 18) {
-        this.numContent = 18;
+    constructor(ctx = document.createElement('div')){
+        this.ctx = ctx;
+        this.content = null;
+        this.menu = ['main','about','contact'];
+        this.news = localStorage.news ? JSON.parse(localStorage.news) : [];
+        this.newsSection = [];
+        this.count = 6;
+        this.numPage = 1;
+        this.countShow = 18;
+        this.numContent = 18; // start
         this.lengthLoading = 0;
+
+
+        this.components = {
+            header: null,
+            footer: null,
+            loadMoreBox: null,
+            loadingNews: null,
+            contentSection: null,
+            nav: null,
+            wrapperHeader: null,
+            navigator: null,
+            title: null,
+            footerWrapper: null,
+            footerPower: null,
+        }
+    }
+
+    updateBroswer(){
+
+        let content = document.querySelector('.content');
+
+        let support = document.createElement('h2');
+        support.classList.add('updateIE');
+
+        support.innerHTML = "Please update browser or if you use IE download a modern browser.";
+        content.appendChild(support);
+        
+    }
+
+    showScrollUp(){
+
+        let scrollUp = document.createElement('div');
+        scrollUp.classList.add('scroll');
+        scrollUp.innerHTML = '<i class="fa-2x fas fa-arrow-up positionIcon"></i>';
+
+        this.ctx.appendChild(scrollUp);
+    }
+
+    customElements(target,type = 'none',name = 'Спрятать') {
+        
+
+        type === 'disabled' && target.setAttribute('disabled','true');
+        type === 'delete' && target.parentNode.removeChild(target);
+        type === 'rename' && (target.value = name);
+
+    }
+
+    loadingNews(target = false){
+
+
+            let lastSection = document.getElementsByTagName('section');
+            let contentSection = document.querySelector('.content');
+            lastSection = lastSection[lastSection.length-1];
+            let num = this.newsSection.length-1;
+            this.newContent = this.news.filter( (element,i) => i > this.numContent);
+
+            let countArticle = Math.ceil(this.countShow / 3);
+
+            for(let j = 0; j < countArticle; j++){
+                let section = document.createElement('section');
+                this.newsSection.push(section);
+            }
+;
+            this.lengthLoading = this.newContent.length > this.countShow ? this.countShow-1 : this.newContent.length;
+
+            for(let i = 0; i < this.lengthLoading; i++){
+
+                let read = document.createElement('a');
+                let article = document.createElement('div');
+                let img = document.createElement('img');
+                console.log(this.newContent[i].urlToImage);
+                img.src = this.newContent[i].urlToImage  ? this.newContent[i].urlToImage : 'img/technology.jpg';
+                img.classList.add('topic-image');
+                let content = document.createElement('p');
+
+                content.classList.add('article__content');
+                article.classList.add('article-col');
+                article.classList.add('rel-col');
+
+                read.href = this.newContent[i].url;
+                read.classList.add('article__content__read');
+
+
+                content.innerHTML = this.newContent[i].description != null ? this.newContent[i].description : this.newContent[i].title;
+
+                article.appendChild(img);
+                article.appendChild(content);
+                article.appendChild(read);
+                this.newsSection[num].appendChild(article);
+
+                if ((i % 3 === 0) || i === 0) num++;
+
+                }
+
+            for (let ij = 7; ij < this.newsSection.length-1; ij++){
+
+                let parent = target.parentNode;
+                contentSection.insertBefore(this.newsSection[ij],parent);
+
+            }
+
+            this.numContent = this.numContent+18;
+    }
+
+
+    showLoadingButton(){
+
+        this.components.loadMoreBox = document.createElement('div');
+        this.components.loadMoreBox.classList.add('controllSection');
+
+        this.components.loadMoreBox = document.createElement('div');
+        this.components.loadMoreBox.classList.add('controllSection');
+
+        this.components.loadingNews = document.createElement('input');
+        this.components.loadingNews.setAttribute('type','button');
+        this.components.loadingNews.classList.add('loadingNewsBtn');
+        this.components.loadingNews.value = 'Загрузить';
+
+        this.components.loadMoreBox.appendChild(this.components.loadingNews);
+    }
+
+
+    showComponents(){
+
+        this.ctx.innerHTML = '';
+
+        this.components.header = document.createElement('header');
+        this.components.footer = document.createElement('footer');
+
+        this.components.contentSection = document.createElement('div');
+        this.components.contentSection.classList.add('content');
+
+        this.components.nav = document.createElement('nav');
+        this.components.wrapperHeader = document.createElement('div');
+        this.components.navigator = document.createElement('ul');
+        this.components.navigator.classList.add('menu');
+
+        this.components.wrapperHeader.classList.add('row-center');
+        this.components.title = document.createElement('h1');
+        this.components.title.innerHTML = 'Technology news';
+        this.components.title.classList.add('title');
+
+        this.components.footerWrapper = document.createElement('div');
+        this.components.footerWrapper.classList.add('footerWrapper');
+        this.components.footerPower = document.createElement('p');
+        this.components.footerPower.classList.add('footerWrapper__powerd');
+        this.components.footerPower.innerHTML = 'Create by themafia98 (Pavel P)';
+
+
+        for (let i = 0; i < 3; i++){
+
+            let li = document.createElement('li');
+            let link = document.createElement('a');
+            link.setAttribute('href', `#!${this.menu[i]}`);
+            link.dataset.menu = this.menu[i];
+            link.innerHTML = this.menu[i];
+            li.appendChild(link);
+            this.components.navigator.appendChild(li);
+        }
+
         this.showLoadingButton();
-      }
 
-      localStorage.news ? this.news = JSON.parse(localStorage.news) : this.news = [];
-      var countArticle = Math.ceil(this.countShow / 3);
-      var num = 0;
+        this.components.nav.appendChild(this.components.navigator);
+        this.components.footerWrapper.appendChild(this.components.footerPower);
 
-      for (var j = 0; j < countArticle + 1; j++) {
-        var section = document.createElement('section');
-        this.newsSection.push(section);
-      }
+        this.components.wrapperHeader.appendChild(this.components.title);
+        this.components.wrapperHeader.appendChild(this.components.nav);
 
-      ;
-      var length = this.countShow + this.lengthLoading;
+        this.components.footer.appendChild(this.components.footerWrapper);
 
-      for (var i = 0; i < length; i++) {
-        var read = document.createElement('a');
-        var article = document.createElement('div');
-        var img = document.createElement('img');
-        img.src = this.news[i].urlToImage ? this.news[i].urlToImage : 'img/technology.jpg';
-        img.classList.add('topic-image');
-        var content = document.createElement('p');
-        content.classList.add('article__content');
-        article.classList.add('article-col');
-        article.classList.add('rel-col');
+        this.components.header.appendChild(this.components.wrapperHeader);
+        this.ctx.appendChild(this.components.header);
+        this.ctx.appendChild(this.components.contentSection);
+        this.ctx.appendChild(this.components.footer);
 
-        if (i === 0) {
-          read.href = this.news[i].url;
-          read.classList.add('hot-article__content__read');
-          read.innerHTML = 'Читать';
-          this.newsSection[i].classList.add('hot-topic');
-          content.classList.add('hot-topic_content');
-          img.classList.add('hot-image');
-        } else {
-          read.href = this.news[i].url;
-          read.classList.add('article__content__read');
+        this.content = document.querySelector('.content');
+
+    }
+
+    showNews(){
+
+        this.content.innerHTML = '';
+        this.newsSection = [];
+
+        if (this.lengthLoading >= 18){
+
+            this.numContent = 18;
+            this.lengthLoading = 0;
+            this.showLoadingButton();
         }
 
-        content.innerHTML = this.news[i].description != null ? this.news[i].description : this.news[i].title;
-        article.appendChild(img);
-        article.appendChild(content);
-        article.appendChild(read);
+        localStorage.news ? this.news = JSON.parse(localStorage.news) : this.news = [];
 
-        if (this.lengthLoading > 0) {
-          !this.newsSection[num] && (this.newsSection[num] = document.createElement('section'));
+
+
+        let countArticle = Math.ceil(this.countShow / 3);
+        let num = 0;
+
+        for(let j = 0; j < countArticle+1; j++){
+
+            let section = document.createElement('section');
+            this.newsSection.push(section);
+        }
+        ;
+        let length = this.countShow + this.lengthLoading;
+
+        for(let i = 0; i < length; i++){
+
+            if (this.news.length === 0) break;
+            let read = document.createElement('a');
+
+            let article = document.createElement('div');
+            let img = document.createElement('img');
+            img.src = this.news[i].urlToImage ? this.news[i].urlToImage : 'img/technology.jpg';
+            img.classList.add('topic-image');
+            let content = document.createElement('p');
+            content.classList.add('article__content');
+            article.classList.add('article-col');
+            article.classList.add('rel-col');
+
+            if (i === 0) {
+                read.href = this.news[i].url;
+                read.classList.add('hot-article__content__read');
+                read.innerHTML = 'Читать';
+                this.newsSection[i].classList.add('hot-topic');
+                content.classList.add('hot-topic_content');
+                img.classList.add('hot-image');
+            } else {
+
+                read.href = this.news[i].url;
+                read.classList.add('article__content__read');
+            }
+
+            content.innerHTML = (this.news[i].description != '' && this.news[i].description != null) ? this.news[i].description : this.news[i].title;
+            article.appendChild(img);
+            article.appendChild(content);
+            article.appendChild(read);
+
+            if (this.lengthLoading > 0){
+
+                !(this.newsSection[num]) && (this.newsSection[num] = document.createElement('section'));
+            }
+
+            this.newsSection[num].appendChild(article);
+            if (i % 3 === 0) num++;
         }
 
-        this.newsSection[num].appendChild(article);
-        if (i % 3 === 0) num++;
-      }
-
-      this.newsSection.forEach(function (item) {
-        return _this3.components.contentSection.appendChild(item);
-      });
-      this.components.contentSection.appendChild(this.components.loadMoreBox);
-      this.ctx.insertBefore(this.components.contentSection, this.components.header.nextSibling);
+        this.newsSection.forEach (item => this.components.contentSection.appendChild(item));
+        this.components.contentSection.appendChild(this.components.loadMoreBox);
+        this.ctx.insertBefore(this.components.contentSection,this.components.header.nextSibling);
     }
-  }, {
-    key: "checkState",
-    value: function checkState(pages) {
-      pages.currentState === 'about' && this.showAbout();
-      pages.currentState === 'contact' && this.showContact();
 
-      if (pages.currentState === 'main' || '') {
-        this.showNews();
-      }
-    }
-  }, {
-    key: "showAbout",
-    value: function showAbout() {
-      this.content.innerHTML = '';
-      var titleState = document.createElement('h2');
-      titleState.classList.add('state-title');
-      titleState.innerHTML = 'About';
-      var aboutWrapper = document.createElement('div');
-      aboutWrapper.classList.add('aboutWrapper');
-      var aboutArticle = document.createElement('p');
-      aboutArticle.classList.add('aboutArticle');
-      aboutArticle.innerHTML = 'This is a test project. Use a <a href = "https://newsapi.org/">News API</a>.';
-      var aboutMe = document.createElement('p');
-      aboutMe.classList.add('aboutMe');
-      aboutMe.innerHTML = 'My name is Pavel Petrovich and i like <strong>JavaScript</strong>.';
-      var imageJs = document.createElement('img');
-      imageJs.classList.add('imagesAbout');
-      imageJs.src = 'img/javascript.png';
-      aboutWrapper.appendChild(aboutArticle);
-      aboutWrapper.appendChild(aboutMe);
+    checkState(pages){
 
-      imageJs.onload = function () {
-        return aboutWrapper.appendChild(imageJs);
-      };
+        (pages.currentState === 'about') && this.showAbout();
+        (pages.currentState === 'contact') && this.showContact();
+        if (pages.currentState === 'main' || '') {
+            
+            this.showNews();
 
-      this.content.appendChild(titleState);
-      this.content.appendChild(aboutWrapper);
-    }
-  }, {
-    key: "showContact",
-    value: function showContact() {
-      this.content.innerHTML = '';
-      var titleState = document.createElement('h2');
-      titleState.classList.add('state-title');
-      titleState.innerHTML = 'Contact';
-      var aboutWrapper = document.createElement('div');
-      aboutWrapper.classList.add('aboutWrapper');
-      var aboutArticle = document.createElement('p');
-      aboutArticle.classList.add('contact-links');
-      aboutArticle.innerHTML = '<a href = "https://github.com/themafia98"><i class="fab fa-github-square"></i></a>' + ' <a href = "https://www.linkedin.com/in/pavel-p-80887b151/"><i class="fab fa-linkedin"></i></a>';
-      var map = document.createElement('div');
-      map.setAttribute('id', 'map');
-      aboutWrapper.appendChild(aboutArticle);
-      this.content.appendChild(titleState);
-      this.content.appendChild(aboutWrapper);
-      this.content.appendChild(map);
-      var maps = News.mapInit();
-      var coords = JSON.parse(localStorage.coords);
-      var mapp = document.querySelector('.ol-viewport');
-      var currentMarker = document.createElement('div');
-      currentMarker.classList.add('markerCurrent');
-      var marker = document.createElement('div');
-      marker.classList.add('marker');
-      mapp.appendChild(currentMarker);
-      mapp.appendChild(marker);
-      var markerYour = new ol.Overlay({
-        position: ol.proj.fromLonLat([coords.longitude, coords.latitude]),
-        element: document.querySelector('.marker'),
-        positioning: 'bottom-center'
-      });
-      maps.addOverlay(markerYour);
-      var markerCurrent = new ol.Overlay({
-        position: ol.proj.fromLonLat([27.4998984, 53.9130256]),
-        element: document.querySelector('.markerCurrent'),
-        positioning: 'bottom-center'
-      });
-      maps.addOverlay(markerCurrent);
-    }
-  }, {
-    key: "showLoader",
-    value: function showLoader() {
-      var app = document.getElementById('newsApp');
-      var loadWrapper = document.createElement('div');
-      loadWrapper.classList.add('loadingWrapper');
-      var load = document.createElement('img');
-      load.classList.add('loader');
-      load.src = 'img/loading.gif';
-      loadWrapper.appendChild(load);
-      this.ctx.insertBefore(loadWrapper, this.components.header.nextSibling);
-    }
-  }]);
-
-  return ViewNews;
-}();
-
-var Controller =
-/*#__PURE__*/
-function () {
-  function Controller() {
-    _classCallCheck(this, Controller);
-
-    this.menu = null;
-    this.menuTitle = null;
-  }
-
-  _createClass(Controller, [{
-    key: "setEvents",
-    value: function setEvents(view, model, pages) {
-      var _this4 = this;
-
-      window.addEventListener('storage', function (e) {
-        view.showNews();
-      }, false);
-      document.addEventListener('scroll', function (e) {
-        _this4.menu = document.getElementsByTagName('nav')[0];
-        var scrolled = window.pageYOffset || document.documentElement.scrollTop;
-
-        if (scrolled > 100) {
-          _this4.menu.classList.add('fixed-menu');
-        } else if (_this4.menu.classList[0] == 'fixed-menu') {
-          _this4.menu.classList.toggle('fixed-menu');
         }
-      }, false);
-      document.addEventListener('click', function (e) {
-        var target = e.target;
-
-        if (target.classList[0] === 'loadingNewsBtn') {
-          view.numContent < 36 && view.loadingNews(target);
-          view.numContent >= 36 && view.customElements(target, 'delete');
-        }
-      }, false);
-      document.addEventListener('DOMContentLoaded', function () {
-        var article = model.parseJsonNews();
-
-        if (article.length > 35) {
-          while (article.length > 37) {
-            article.pop();
-          }
-
-          model.stringifyNews(article);
-        }
-      }, false);
-      window.addEventListener('hashchange', updateState);
-
-      function updateState(e) {
-        sessionStorage.state = window.location.hash.slice(2);
-        pages.currentState = sessionStorage.state;
-        view.checkState(pages);
-      }
     }
-  }]);
 
-  return Controller;
-}();
+    showAbout() {
+        
+        this.content.innerHTML = '';
 
-var app = function () {
-  function main() {
-    var pages = new Pages();
-    var news = new News();
-    news.getCoords();
-    var view = new ViewNews(document.getElementById('newsApp'));
-    var controll = new Controller();
-    controll.setEvents(view, news, pages);
-    view.showComponents();
-    view.showLoader();
-    news.request(view, pages);
-  }
+        let titleState = document.createElement('h2');
+        titleState.classList.add('state-title');
+        titleState.innerHTML = 'About';
 
-  return {
-    init: main
-  };
-}();
+        let aboutWrapper = document.createElement('div');
+        aboutWrapper.classList.add('aboutWrapper');
+
+        let aboutArticle = document.createElement('p');
+        aboutArticle.classList.add('aboutArticle');
+        aboutArticle.innerHTML = 'This is a test project. Use a <a href = "https://newsapi.org/">News API</a>.';
+
+
+        let aboutMe = document.createElement('p');
+        aboutMe.classList.add('aboutMe');
+        aboutMe.innerHTML = 'My name is Pavel Petrovich and i like <strong>JavaScript</strong>.';
+        let imageJs = document.createElement('img');
+        imageJs.classList.add('imagesAbout');
+        imageJs.src = 'img/javascript.png';
+
+        aboutWrapper.appendChild(aboutArticle);
+        aboutWrapper.appendChild(aboutMe);
+        imageJs.onload = () => aboutWrapper.appendChild(imageJs);
+
+        this.content.appendChild(titleState);
+        this.content.appendChild(aboutWrapper);
+    }
+
+    showContact(){
+
+        this.content.innerHTML = '';
+
+        let titleState = document.createElement('h2');
+        titleState.classList.add('state-title');
+        titleState.innerHTML = 'Contact';
+
+        let aboutWrapper = document.createElement('div');
+        aboutWrapper.classList.add('aboutWrapper');
+
+        let aboutArticle = document.createElement('p');
+        aboutArticle.classList.add('contact-links');
+        aboutArticle.innerHTML = '<a href = "https://github.com/themafia98"><i class="fab fa-github-square"></i></a>' +
+                                 ' <a href = "https://www.linkedin.com/in/pavel-p-80887b151/"><i class="fab fa-linkedin"></i></a>';
+
+        let map = document.createElement('div');
+        map.setAttribute('id','map');
+
+        aboutWrapper.appendChild(aboutArticle);
+
+        this.content.appendChild(titleState);
+        this.content.appendChild(aboutWrapper);
+        this.content.appendChild(map);
+
+        let maps = News.mapInit();
+        let coords = JSON.parse(localStorage.coords);
+
+        let mapp = document.querySelector('.ol-viewport');
+
+        let currentMarker = document.createElement('div');
+        currentMarker.classList.add('markerCurrent');
+
+        let marker = document.createElement('div');
+        marker.classList.add('marker');
+
+        mapp.appendChild(currentMarker);
+        mapp.appendChild(marker);
+
+        if (!coords.error) {
+        let markerYour = new ol.Overlay({
+            position: ol.proj.fromLonLat([coords.longitude,coords.latitude]),
+            element: document.querySelector('.marker'),
+            positioning: 'bottom-center'
+        });
+        maps.addOverlay(markerYour);
+        } else document.querySelector('.marker').style.display = 'none';
+
+        let markerCurrent = new ol.Overlay({
+            position: ol.proj.fromLonLat([27.4998984,53.9130256]),
+            element: document.querySelector('.markerCurrent'),
+            positioning: 'bottom-center'
+        });
+        maps.addOverlay(markerCurrent);
+    }
+
+
+
+
+
+    showLoader(){
+
+        let app = document.getElementById('newsApp');
+
+        let loadWrapper = document.createElement('div');
+        loadWrapper.classList.add('loadingWrapper');
+        let load = document.createElement('img');
+        load.classList.add('loader');
+        load.src = 'img/loading.gif';
+
+        loadWrapper.appendChild(load);
+
+        this.ctx.insertBefore(loadWrapper,this.components.header.nextSibling);
+    }
+}
+class Controller {
+
+    constructor (){
+
+        this.menu = null;
+        this.menuTitle = null;
+        this.timer = null;
+        this.scrolled = null;
+        this.clickScrollCount = 0;
+
+    }
+
+    setEvents (view,model,pages){
+
+        window.addEventListener('storage', (e) => {  view.showNews() },false);
+        document.addEventListener('scroll', (e) => {
+
+            this.menu = document.getElementsByTagName('nav')[0];
+            this.scrolled = window.pageYOffset || document.documentElement.scrollTop;
+
+
+            if (this.timer != null && this.scrolled === 0) { 
+
+                clearInterval(this.timer);
+                this.clickScrollCount = 0;
+            };
+
+            if (this.scrolled > 100) {
+
+                this.menu.classList.add('fixed-menu');
+               !document.querySelector('.scroll') && view.showScrollUp();
+
+            } else if (this.menu.classList[0] == 'fixed-menu' && this.scrolled < 100) {
+                let scroll =  document.querySelector('.scroll');
+                this.menu.classList.toggle('fixed-menu');
+                scroll.parentNode.removeChild(scroll); // || remove()
+            }
+
+        },false);
+
+        document.addEventListener('click', (e) => {
+
+            let target = e.target;
+
+            if (target.classList[0] === 'loadingNewsBtn'){
+            view.numContent < 36 && view.loadingNews(target);
+            view.numContent >= 36 && view.customElements(target,'delete');
+            }
+
+            if((target.classList[0] === 'scroll' || target.parentNode.classList[0] === 'scroll') && 
+                this.clickScrollCount === 0){
+
+                this.clickScrollCount++;
+                this.timer =  setInterval(function tick() {
+                document.documentElement.scrollTop = document.documentElement.scrollTop - 20;
+                },0);
+            }
+
+        },false);
+
+        document.addEventListener('DOMContentLoaded',() => {
+
+            let article = model.parseJsonNews();
+
+            if (article.length > 35){
+
+                while (article.length > 37) article.pop();
+                model.stringifyNews(article);
+            }
+
+
+
+        },false);
+
+
+        window.addEventListener('hashchange', updateState);
+
+        function updateState(e) {
+
+            sessionStorage.state = window.location.hash.slice(2);
+            pages.currentState = sessionStorage.state;
+
+            view.checkState(pages);
+        }
+
+    }
+}
+
+
+
+
+import { fetch as fetchPolyfill } from '../js/3rd/fetch.js';
+
+let app = (function(){
+
+
+    function main(){
+
+        const pages = new Pages();
+        const news = new News();
+
+        news.getCoords();
+
+        const view = new ViewNews(document.getElementById('newsApp'));
+        const controll = new Controller();
+        controll.setEvents(view,news,pages);
+        view.showComponents();
+        view.showLoader();
+        const have = news.request(view,pages);
+
+        if (have === false) {
+
+            view.customElements(document.querySelector('.loader'),'delete');
+            view.updateBroswer();
+        }
+    }
+
+    return {init: main };
+})();
 
 app.init();
+
 //# sourceMappingURL=bundle.js.map

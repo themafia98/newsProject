@@ -122,7 +122,7 @@ a {
 
      .article-col {
 
-        flex: 0 0 100%;
+        flex: 0 0 80%;
     }
 
     .rel-col { 
@@ -255,6 +255,11 @@ a {
         opacity: 0.6;
     }
 
+    .loadingNewsBtn:hover {
+
+        color: black;
+    }
+
     .loadingNewsBtn:active {
 
         box-shadow: 0 0 5px black;
@@ -340,7 +345,7 @@ a {
 
       .ol-scale-line {
 
-        left: 87%;
+        left: 50%;
 
     }
 
@@ -365,6 +370,36 @@ a {
          background: blue;
          border-radius: 15px;
 
+    }
+
+    .scroll {
+
+        width: 45px;
+        height: 45px;
+        background: grey;
+        position: fixed;
+        bottom: 50px;
+        right: 100px;
+        border-radius: 30px;
+        border: 3px solid black;
+        transition: all 0.3s linear;
+    }
+
+    .scroll:hover {
+
+        background: black;
+        border: 3px solid grey;
+        color: white;
+    }
+
+    .positionIcon {
+
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 8px;
+        text-align: center;
+        cursor: pointer;
     }
 }
 

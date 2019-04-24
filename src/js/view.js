@@ -41,6 +41,15 @@ class ViewNews {
         
     }
 
+    showScrollUp(){
+
+        let scrollUp = document.createElement('div');
+        scrollUp.classList.add('scroll');
+        scrollUp.innerHTML = '<i class="fa-2x fas fa-arrow-up positionIcon"></i>';
+
+        this.ctx.appendChild(scrollUp);
+    }
+
     customElements(target,type = 'none',name = 'Спрятать') {
         
 
@@ -73,7 +82,7 @@ class ViewNews {
                 let read = document.createElement('a');
                 let article = document.createElement('div');
                 let img = document.createElement('img');
-
+                console.log(this.newContent[i].urlToImage);
                 img.src = this.newContent[i].urlToImage  ? this.newContent[i].urlToImage : 'img/technology.jpg';
                 img.classList.add('topic-image');
                 let content = document.createElement('p');
@@ -92,8 +101,7 @@ class ViewNews {
                 article.appendChild(content);
                 article.appendChild(read);
                 this.newsSection[num].appendChild(article);
-                
-                console.log(article);
+
                 if ((i % 3 === 0) || i === 0) num++;
 
                 }
@@ -127,7 +135,6 @@ class ViewNews {
 
 
     showComponents(){
-        
 
         this.ctx.innerHTML = '';
 
@@ -164,7 +171,6 @@ class ViewNews {
             li.appendChild(link);
             this.components.navigator.appendChild(li);
         }
-        
 
         this.showLoadingButton();
 
@@ -176,24 +182,22 @@ class ViewNews {
 
         this.components.footer.appendChild(this.components.footerWrapper);
 
-        
         this.components.header.appendChild(this.components.wrapperHeader);
         this.ctx.appendChild(this.components.header);
         this.ctx.appendChild(this.components.contentSection);
         this.ctx.appendChild(this.components.footer);
-        
-        this.content = document.querySelector('.content');
 
+        this.content = document.querySelector('.content');
 
     }
 
     showNews(){
-        
+
         this.content.innerHTML = '';
         this.newsSection = [];
 
         if (this.lengthLoading >= 18){
-            
+
             this.numContent = 18;
             this.lengthLoading = 0;
             this.showLoadingButton();
@@ -215,8 +219,8 @@ class ViewNews {
         let length = this.countShow + this.lengthLoading;
 
         for(let i = 0; i < length; i++){
-    
 
+            if (this.news.length === 0) break;
             let read = document.createElement('a');
 
             let article = document.createElement('div');
@@ -241,7 +245,7 @@ class ViewNews {
                 read.classList.add('article__content__read');
             }
 
-            content.innerHTML = this.news[i].description != null ? this.news[i].description : this.news[i].title;
+            content.innerHTML = (this.news[i].description != '' && this.news[i].description != null) ? this.news[i].description : this.news[i].title;
             article.appendChild(img);
             article.appendChild(content);
             article.appendChild(read);
@@ -341,22 +345,21 @@ class ViewNews {
         mapp.appendChild(currentMarker);
         mapp.appendChild(marker);
 
+        if (!coords.error) {
         let markerYour = new ol.Overlay({
             position: ol.proj.fromLonLat([coords.longitude,coords.latitude]),
             element: document.querySelector('.marker'),
             positioning: 'bottom-center'
         });
         maps.addOverlay(markerYour);
-  
-  
-          let markerCurrent = new ol.Overlay({
+        } else document.querySelector('.marker').style.display = 'none';
+
+        let markerCurrent = new ol.Overlay({
             position: ol.proj.fromLonLat([27.4998984,53.9130256]),
             element: document.querySelector('.markerCurrent'),
             positioning: 'bottom-center'
         });
         maps.addOverlay(markerCurrent);
-
-        
     }
 
 
@@ -364,7 +367,7 @@ class ViewNews {
 
 
     showLoader(){
-        
+
         let app = document.getElementById('newsApp');
 
         let loadWrapper = document.createElement('div');
@@ -374,11 +377,7 @@ class ViewNews {
         load.src = 'img/loading.gif';
 
         loadWrapper.appendChild(load);
-        
 
         this.ctx.insertBefore(loadWrapper,this.components.header.nextSibling);
-
-
-        
     }
 }
