@@ -72,7 +72,7 @@
 
     gulp.task('js:build', function (callback){
       gulp
-        .src(['src/js/model.js','src/js/view.js','src/js/controller.js', 'src/js/index.js'])
+        .src(['src/js/modernizr-touch.js','src/js/model.js','src/js/view.js','src/js/controller.js', 'src/js/index.js'])
         .pipe(sourcemaps.init())
         .pipe(concat('bundle.js'))
       //   .pipe(babel({

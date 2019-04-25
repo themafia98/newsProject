@@ -23,6 +23,13 @@ let app = (function(){
             view.customElements(document.querySelector('.loader'),'delete');
             view.updateBroswer();
         }
+
+        
+        const db = new DataBase(news.parseJsonNews());
+        let dateBase = db.openDateBase();
+
+        controll.setDbEvents(dateBase,db.storeData);
+
     }
 
     return {init: main };

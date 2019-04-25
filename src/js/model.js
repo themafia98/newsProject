@@ -114,7 +114,20 @@ class News {
         .then(response => {
 
             this.correctUTF = [];
+
             this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
+
+            console.log(this.buffer);
+            for (let item of this.buffer){
+
+               (item.source) && (item.name = item.source.name);
+
+               item.source && (delete item.source);
+               item.author !== undefined && (delete item.author);
+               item.content !== undefined && (delete item.content);
+
+            }
+
             let filterNews =  response.articles.filter( (item,i) =>{
 
             let its = this.buffer.find(it => it.description === item.description);
@@ -126,7 +139,7 @@ class News {
 
             let findItem = this.buffer || response.articles;
 
-            this.correctUTF = findItem.filter (item => item.source.name != 'Rg.ru');
+            this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
             localStorage.news = JSON.stringify(this.correctUTF);
 
             })
@@ -160,4 +173,21 @@ class News {
 
         localStorage.news = JSON.stringify(article);
     }
+}
+
+
+class DataBase {
+
+    constructor(data = []){
+        this.storeData = data;
+    }
+
+    openDateBase(){
+
+        if (!window.indexedDB) return;
+
+       return indexedDB.open('newsDB',1);
+    }
+
+
 }

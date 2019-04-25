@@ -1,3 +1,6 @@
+/*! modernizr 3.6.0 (Custom Build) | MIT *
+ * https://modernizr.com/download/?-touchevents-setclasses !*/
+!function(e,n,t){function o(e){var n=u.className,t=Modernizr._config.classPrefix||"";if(p&&(n=n.baseVal),Modernizr._config.enableJSClass){var o=new RegExp("(^|\\s)"+t+"no-js(\\s|$)");n=n.replace(o,"$1"+t+"js$2")}Modernizr._config.enableClasses&&(n+=" "+t+e.join(" "+t),p?u.className.baseVal=n:u.className=n)}function s(e,n){return typeof e===n}function a(){var e,n,t,o,a,i,r;for(var l in c)if(c.hasOwnProperty(l)){if(e=[],n=c[l],n.name&&(e.push(n.name.toLowerCase()),n.options&&n.options.aliases&&n.options.aliases.length))for(t=0;t<n.options.aliases.length;t++)e.push(n.options.aliases[t].toLowerCase());for(o=s(n.fn,"function")?n.fn():n.fn,a=0;a<e.length;a++)i=e[a],r=i.split("."),1===r.length?Modernizr[r[0]]=o:(!Modernizr[r[0]]||Modernizr[r[0]]instanceof Boolean||(Modernizr[r[0]]=new Boolean(Modernizr[r[0]])),Modernizr[r[0]][r[1]]=o),f.push((o?"":"no-")+r.join("-"))}}function i(){return"function"!=typeof n.createElement?n.createElement(arguments[0]):p?n.createElementNS.call(n,"http://www.w3.org/2000/svg",arguments[0]):n.createElement.apply(n,arguments)}function r(){var e=n.body;return e||(e=i(p?"svg":"body"),e.fake=!0),e}function l(e,t,o,s){var a,l,f,c,d="modernizr",p=i("div"),h=r();if(parseInt(o,10))for(;o--;)f=i("div"),f.id=s?s[o]:d+(o+1),p.appendChild(f);return a=i("style"),a.type="text/css",a.id="s"+d,(h.fake?h:p).appendChild(a),h.appendChild(p),a.styleSheet?a.styleSheet.cssText=e:a.appendChild(n.createTextNode(e)),p.id=d,h.fake&&(h.style.background="",h.style.overflow="hidden",c=u.style.overflow,u.style.overflow="hidden",u.appendChild(h)),l=t(p,e),h.fake?(h.parentNode.removeChild(h),u.style.overflow=c,u.offsetHeight):p.parentNode.removeChild(p),!!l}var f=[],c=[],d={_version:"3.6.0",_config:{classPrefix:"",enableClasses:!0,enableJSClass:!0,usePrefixes:!0},_q:[],on:function(e,n){var t=this;setTimeout(function(){n(t[e])},0)},addTest:function(e,n,t){c.push({name:e,fn:n,options:t})},addAsyncTest:function(e){c.push({name:null,fn:e})}},Modernizr=function(){};Modernizr.prototype=d,Modernizr=new Modernizr;var u=n.documentElement,p="svg"===u.nodeName.toLowerCase(),h=d._config.usePrefixes?" -webkit- -moz- -o- -ms- ".split(" "):["",""];d._prefixes=h;var m=d.testStyles=l;Modernizr.addTest("touchevents",function(){var t;if("ontouchstart"in e||e.DocumentTouch&&n instanceof DocumentTouch)t=!0;else{var o=["@media (",h.join("touch-enabled),("),"heartz",")","{#modernizr{top:9px;position:absolute}}"].join("");m(o,function(e){t=9===e.offsetTop})}return t}),a(),o(f),delete d.addTest,delete d.addAsyncTest;for(var v=0;v<Modernizr._q.length;v++)Modernizr._q[v]();e.Modernizr=Modernizr}(window,document);
 
 
 class Pages {
@@ -114,7 +117,20 @@ class News {
         .then(response => {
 
             this.correctUTF = [];
+
             this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
+
+            console.log(this.buffer);
+            for (let item of this.buffer){
+
+               (item.source) && (item.name = item.source.name);
+
+               item.source && (delete item.source);
+               item.author !== undefined && (delete item.author);
+               item.content !== undefined && (delete item.content);
+
+            }
+
             let filterNews =  response.articles.filter( (item,i) =>{
 
             let its = this.buffer.find(it => it.description === item.description);
@@ -126,7 +142,7 @@ class News {
 
             let findItem = this.buffer || response.articles;
 
-            this.correctUTF = findItem.filter (item => item.source.name != 'Rg.ru');
+            this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
             localStorage.news = JSON.stringify(this.correctUTF);
 
             })
@@ -160,6 +176,23 @@ class News {
 
         localStorage.news = JSON.stringify(article);
     }
+}
+
+
+class DataBase {
+
+    constructor(data = []){
+        this.storeData = data;
+    }
+
+    openDateBase(){
+
+        if (!window.indexedDB) return;
+
+       return indexedDB.open('newsDB',1);
+    }
+
+
 }
 
 
@@ -555,55 +588,111 @@ class Controller {
         this.scrolled = null;
         this.clickScrollCount = 0;
 
+
+    }
+
+    setDbEvents(dateNews,storeData){
+
+        dateNews.onupgradeneeded = function(event) {
+
+            const db = event.target.result;
+
+            // Create an objectStore to hold information about our customers. We're
+            // going to use "id" as our key path because it's guaranteed to be
+            // unique.
+            let objectStore = db.createObjectStore("news", {autoIncrement:true});
+
+            // Create an index to search customers by name. We may have duplicates
+            // so we can't use a unique index.
+            objectStore.createIndex("name",'name', { unique: false });
+
+            // Store values in the newly created objectStore.
+
+            for (let i = 0; i < storeData.length; i++){
+
+                objectStore.add(storeData[i]);
+            }
+
+        };
+
+        dateNews.onsuccess = function(event) { //если база открылась и все в порядке
+
+            const db = event.target.result;
+
+            let objectStore = db.transaction(["news"], "readwrite");
+            const store = objectStore.objectStore("news");
+
+            store.openCursor().onsuccess = function(event) {
+                let cursor = event.target.result;
+
+                if (cursor) cursor.continue();
+            };
+        };
     }
 
     setEvents (view,model,pages){
 
-        window.addEventListener('storage', (e) => {  view.showNews() },false);
-        document.addEventListener('scroll', (e) => {
+        let self = this;
 
-            this.menu = document.getElementsByTagName('nav')[0];
-            this.scrolled = window.pageYOffset || document.documentElement.scrollTop;
+        function scroll(e) {
+
+            self.menu = document.getElementsByTagName('nav')[0];
+            self.scrolled = window.pageYOffset || document.documentElement.scrollTop;
 
 
-            if (this.timer != null && this.scrolled === 0) { 
+            if (self.timer != null && self.scrolled === 0) { 
 
-                clearInterval(this.timer);
-                this.clickScrollCount = 0;
+                clearInterval(self.timer);
+                self.clickScrollCount = 0;
             };
+            console.log(self.scrolled);
+            if (self.scrolled > 100) {
 
-            if (this.scrolled > 100) {
+                self.menu.classList.add('fixed-menu');
+                !document.querySelector('.scroll') && view.showScrollUp();
 
-                this.menu.classList.add('fixed-menu');
-               !document.querySelector('.scroll') && view.showScrollUp();
+            } else if (self.menu.classList[0] == 'fixed-menu' && self.scrolled < 100) {
 
-            } else if (this.menu.classList[0] == 'fixed-menu' && this.scrolled < 100) {
                 let scroll =  document.querySelector('.scroll');
-                this.menu.classList.toggle('fixed-menu');
+                self.menu.classList.toggle('fixed-menu');
                 scroll.parentNode.removeChild(scroll); // || remove()
             }
 
-        },false);
+        };
 
-        document.addEventListener('click', (e) => {
 
+        
+        function clickEvent(e) {
+            
             let target = e.target;
 
             if (target.classList[0] === 'loadingNewsBtn'){
+
             view.numContent < 36 && view.loadingNews(target);
             view.numContent >= 36 && view.customElements(target,'delete');
             }
 
             if((target.classList[0] === 'scroll' || target.parentNode.classList[0] === 'scroll') && 
-                this.clickScrollCount === 0){
+                self.clickScrollCount === 0){
 
-                this.clickScrollCount++;
-                this.timer =  setInterval(function tick() {
+                self.clickScrollCount++;
+                self.timer =  setInterval(function tick() {
                 document.documentElement.scrollTop = document.documentElement.scrollTop - 20;
                 },0);
             }
 
-        },false);
+        };
+
+
+
+        /* -----------Modernizr----------- */
+        console.log('touchevents detected:' + Modernizr.touchevents);
+        Modernizr.touchevents && document.addEventListener('touchend',clickEvent,false);
+        !Modernizr.touchevents && document.addEventListener('click',clickEvent,false);
+
+        window.addEventListener('storage', (e) => {  view.showNews() },false);
+        !Modernizr.touchevents && document.addEventListener('scroll',scroll,false);
+
 
         document.addEventListener('DOMContentLoaded',() => {
 
@@ -660,6 +749,13 @@ let app = (function(){
             view.customElements(document.querySelector('.loader'),'delete');
             view.updateBroswer();
         }
+
+        
+        const db = new DataBase(news.parseJsonNews());
+        let dateBase = db.openDateBase();
+
+        controll.setDbEvents(dateBase,db.storeData);
+
     }
 
     return {init: main };
