@@ -649,13 +649,13 @@ class Controller {
             if (self.scrolled > 100) {
 
                 self.menu.classList.add('fixed-menu');
-                !document.querySelector('.scroll') && view.showScrollUp();
+                (!document.querySelector('.scroll') && !Modernizr.touchevents) && view.showScrollUp();
 
             } else if (self.menu.classList[0] == 'fixed-menu' && self.scrolled < 100) {
 
                 let scroll =  document.querySelector('.scroll');
                 self.menu.classList.toggle('fixed-menu');
-                scroll.parentNode.removeChild(scroll); // || remove()
+                scroll && scroll.parentNode.removeChild(scroll); // || remove()
             }
 
         };
@@ -691,7 +691,7 @@ class Controller {
         !Modernizr.touchevents && document.addEventListener('click',clickEvent,false);
 
         window.addEventListener('storage', (e) => {  view.showNews() },false);
-        !Modernizr.touchevents && document.addEventListener('scroll',scroll,false);
+        document.addEventListener('scroll',scroll,false);
 
 
         document.addEventListener('DOMContentLoaded',() => {
