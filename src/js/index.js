@@ -16,17 +16,15 @@ let app = (function(){
         controll.setEvents(view,news,pages);
         view.showComponents();
         view.showLoader();
-        const have = news.request(view,pages);
+        const db = new DataBase(news.parseJsonNews());
+        let dateBase = db.openDateBase();
+        const have = news.request(view,pages,dateBase);
 
         if (have === false) {
 
             view.customElements(document.querySelector('.loader'),'delete');
             view.updateBroswer();
         }
-
-        
-        const db = new DataBase(news.parseJsonNews());
-        let dateBase = db.openDateBase();
 
         controll.setDbEvents(dateBase,db.storeData);
 

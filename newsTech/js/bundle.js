@@ -107,20 +107,20 @@ class News {
 
     }
 
-    request(view,pages){
+    request(view,pages,db){
 
         if (!window.fetch) return false;
-
+        
         window.fetch(`${this.URI+this.type}?${this.country}&category=${this.CATEGORY}&apiKey=${this.KEY}`)
 
         .then(response => response.json())
         .then(response => {
-
+            
             this.correctUTF = [];
 
             this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
 
-            console.log(this.buffer);
+
             for (let item of this.buffer){
 
                (item.source) && (item.name = item.source.name);
@@ -138,12 +138,36 @@ class News {
             return  its === undefined;
             });
 
-            filterNews.length && filterNews.forEach(element => this.buffer.unshift(element));
+            if (filterNews.length) {
+                
+                filterNews.forEach(element => this.buffer.unshift(element));
+                console.log(filterNews);
+            }
 
             let findItem = this.buffer || response.articles;
 
             this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
             localStorage.news = JSON.stringify(this.correctUTF);
+
+            let trans1 = db.result.transaction('news').objectStore('news').getAll();
+
+            trans1.onsuccess = (e) => {
+                
+                console.log(e.target.result);
+            };
+            
+             let trans = db.result.transaction('news','readwrite');
+            
+                    // for (let item of this.correctUTF){
+                    //     item.test = 'test';
+                    //     trans.objectStore('news').put(item);
+
+                    // }
+
+
+                    
+
+
 
             })
 
@@ -594,6 +618,7 @@ class Controller {
     setDbEvents(dateNews,storeData){
 
         dateNews.onupgradeneeded = function(event) {
+            
 
             const db = event.target.result;
 
@@ -616,7 +641,7 @@ class Controller {
         };
 
         dateNews.onsuccess = function(event) { //если база открылась и все в порядке
-
+            
             const db = event.target.result;
 
             let objectStore = db.transaction(["news"], "readwrite");
@@ -627,6 +652,17 @@ class Controller {
 
                 if (cursor) cursor.continue();
             };
+
+
+            let trans = db.transaction('news').objectStore('news').getAll();
+
+                trans.onsuccess = function(e){
+
+                    console.log(trans.result);
+
+                    
+                }
+        
         };
     }
 
@@ -742,17 +778,15 @@ let app = (function(){
         controll.setEvents(view,news,pages);
         view.showComponents();
         view.showLoader();
-        const have = news.request(view,pages);
+        const db = new DataBase(news.parseJsonNews());
+        let dateBase = db.openDateBase();
+        const have = news.request(view,pages,dateBase);
 
         if (have === false) {
 
             view.customElements(document.querySelector('.loader'),'delete');
             view.updateBroswer();
         }
-
-        
-        const db = new DataBase(news.parseJsonNews());
-        let dateBase = db.openDateBase();
 
         controll.setDbEvents(dateBase,db.storeData);
 

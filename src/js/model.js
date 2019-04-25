@@ -104,20 +104,20 @@ class News {
 
     }
 
-    request(view,pages){
+    request(view,pages,db){
 
         if (!window.fetch) return false;
-
+        
         window.fetch(`${this.URI+this.type}?${this.country}&category=${this.CATEGORY}&apiKey=${this.KEY}`)
 
         .then(response => response.json())
         .then(response => {
-
+            
             this.correctUTF = [];
 
             this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
 
-            console.log(this.buffer);
+
             for (let item of this.buffer){
 
                (item.source) && (item.name = item.source.name);
@@ -135,12 +135,36 @@ class News {
             return  its === undefined;
             });
 
-            filterNews.length && filterNews.forEach(element => this.buffer.unshift(element));
+            if (filterNews.length) {
+                
+                filterNews.forEach(element => this.buffer.unshift(element));
+                console.log(filterNews);
+            }
 
             let findItem = this.buffer || response.articles;
 
             this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
             localStorage.news = JSON.stringify(this.correctUTF);
+
+            let trans1 = db.result.transaction('news').objectStore('news').getAll();
+
+            trans1.onsuccess = (e) => {
+                
+                console.log(e.target.result);
+            };
+            
+             let trans = db.result.transaction('news','readwrite');
+            
+                    // for (let item of this.correctUTF){
+                    //     item.test = 'test';
+                    //     trans.objectStore('news').put(item);
+
+                    // }
+
+
+                    
+
+
 
             })
 

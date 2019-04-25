@@ -14,6 +14,7 @@ class Controller {
     setDbEvents(dateNews,storeData){
 
         dateNews.onupgradeneeded = function(event) {
+            
 
             const db = event.target.result;
 
@@ -36,7 +37,7 @@ class Controller {
         };
 
         dateNews.onsuccess = function(event) { //если база открылась и все в порядке
-
+            
             const db = event.target.result;
 
             let objectStore = db.transaction(["news"], "readwrite");
@@ -47,6 +48,17 @@ class Controller {
 
                 if (cursor) cursor.continue();
             };
+
+
+            let trans = db.transaction('news').objectStore('news').getAll();
+
+                trans.onsuccess = function(e){
+
+                    console.log(trans.result);
+
+                    
+                }
+        
         };
     }
 
