@@ -16,9 +16,9 @@ let app = (function(){
         controll.setEvents(view,news,pages);
         view.showComponents();
         view.showLoader();
-        const db = new DataBase(news.parseJsonNews());
-        let dateBase = db.openDateBase();
-        const have = news.request(view,pages,dateBase);
+
+        const db = new DataBase(news.articlesNews);
+        const have = news.request(view,pages,db);
 
         if (have === false) {
 
@@ -26,7 +26,7 @@ let app = (function(){
             view.updateBroswer();
         }
 
-        controll.setDbEvents(dateBase,db.storeData);
+        // controll.setDbEvents(dateBase,db.storeData);
 
     }
 

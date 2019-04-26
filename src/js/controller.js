@@ -50,14 +50,6 @@ class Controller {
             };
 
 
-            let trans = db.transaction('news').objectStore('news').getAll();
-
-                trans.onsuccess = function(e){
-
-                    console.log(trans.result);
-
-                    
-                }
         
         };
     }

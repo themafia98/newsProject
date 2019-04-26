@@ -33,6 +33,7 @@ class News {
         this.country = `country=${lang}`;
         this.buffer = false;
         this.correctUTF = [];
+        this.articlesNews = [];
 
         this.error = null;
     }
@@ -114,72 +115,8 @@ class News {
         window.fetch(`${this.URI+this.type}?${this.country}&category=${this.CATEGORY}&apiKey=${this.KEY}`)
 
         .then(response => response.json())
-        .then(response => {
-            
-            this.correctUTF = [];
-
-            this.buffer = localStorage.news ? JSON.parse(localStorage.news) : response.articles;
-
-
-            for (let item of this.buffer){
-
-               (item.source) && (item.name = item.source.name);
-
-               item.source && (delete item.source);
-               item.author !== undefined && (delete item.author);
-               item.content !== undefined && (delete item.content);
-
-            }
-
-            let filterNews =  response.articles.filter( (item,i) =>{
-
-            let its = this.buffer.find(it => it.description === item.description);
-
-            return  its === undefined;
-            });
-
-            if (filterNews.length) {
-                
-                filterNews.forEach(element => this.buffer.unshift(element));
-                console.log(filterNews);
-            }
-
-            let findItem = this.buffer || response.articles;
-
-            this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
-            localStorage.news = JSON.stringify(this.correctUTF);
-
-            let trans1 = db.result.transaction('news').objectStore('news').getAll();
-
-            trans1.onsuccess = (e) => {
-                
-                console.log(e.target.result);
-            };
-            
-             let trans = db.result.transaction('news','readwrite');
-            
-                    // for (let item of this.correctUTF){
-                    //     item.test = 'test';
-                    //     trans.objectStore('news').put(item);
-
-                    // }
-
-
-                    
-
-
-
-            })
-
-            .then(response => {
-
-            sessionStorage.state = window.location.hash.slice(2);
-            pages.currentState = sessionStorage.state;
-            view.showNews();
-            view.checkState(pages);
-            view.customElements(document.querySelector('.loader'),'delete');
-
-        })
+        .then(response => sessionStorage.news = JSON.stringify(response.articles))
+        .then(response => { return db.openDateBase(view,pages,response);})
 
         .catch((error) => {
 
@@ -191,14 +128,15 @@ class News {
         });
 }
 
-    parseJsonNews(article = localStorage.news){
+
+    parseJsonNews(article = sessionStorage.news){
 
         return article ? JSON.parse(article) : false;
     }
 
     stringifyNews(article){
 
-        localStorage.news = JSON.stringify(article);
+        sessionStorage.news = JSON.stringify(article);
     }
 }
 
@@ -206,17 +144,144 @@ class News {
 class DataBase {
 
     constructor(data = []){
-        this.storeData = data;
+        this.storeData = [];
+        this.requestArticle = [];
+        this.dbItems = null;
     }
 
-    openDateBase(){
+    openDateBase(view,pages,storeData){
+
+        let self = this;
+
+        this.requestArticle = JSON.parse(sessionStorage.news);
 
         if (!window.indexedDB) return;
 
-       return indexedDB.open('newsDB',1);
+        const dbPromise = window.indexedDB.open('newsDB',1);
+        dbPromise.onupgradeneeded = function(event) {
+            
+            const db = event.target.result;
+            let objectStore = db.createObjectStore("news", {autoIncrement:true});
+
+            // Create an index to search customers by name. We may have duplicates
+            // so we can't use a unique index.
+            objectStore.createIndex("name",'name', { unique: false });
+
+            // Store values in the newly created objectStore.
+
+            for (let i = 0; i < self.storeData.length; i++){
+
+                objectStore.add(self.storeData[i]);
+            }
+
+        };
+
+        dbPromise.onsuccess = (e) => { 
+            
+            const db = e.target.result;
+
+            this.dbItems = db.transaction('news').objectStore('news').getAll();
+        
+            this.dbItems.onsuccess = (e) => {
+                const news = e.target.result;
+    
+                         this.correctUTF = [];
+                         
+                        this.buffer = news.length ? news : this.requestArticle;
+                            
+            
+                        for (let item of this.buffer){
+
+                            (item.source) && (item.name = item.source.name);
+                            item.source && (delete item.source);
+                            item.author !== undefined && (delete item.author);
+                            item.content !== undefined && (delete item.content);
+                        }
+                        
+                        let filterNews =  this.requestArticle.filter( (item,i) =>{
+                        let its = this.buffer.find(it => it.description === item.description);
+                        return  its === undefined;
+                        });
+                        
+                        if (filterNews.length) {
+                            filterNews.forEach(element => this.buffer.unshift(element));
+                            console.log(filterNews);
+                        }
+                        
+                        let findItem = this.buffer || this.requestArticle;
+
+                        this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
+
+                        let trans = db.transaction('news','readwrite');
+            
+                        for (let i = 0; i < this.correctUTF.length; i++ ){
+                            
+                            trans.objectStore('news').put(this.correctUTF[i],i+1);
+                        }
+
+                    sessionStorage.removeItem('news');
+  
+                    sessionStorage.state = window.location.hash.slice(2);
+                    pages.currentState = sessionStorage.state;
+                    view.showNews(news);
+                    view.checkState(pages);
+                    view.customElements(document.querySelector('.loader'),'delete');
+
     }
 
+        }
+    // .then(db => {  console.log(db);  /* db.result.transaction('news').objectStore('news').getAll() */ })
+    //     .then(news => {
+    //         
+    //         news.onsuccess = (e) => {
+    //          this.correctUTF = [];
+    //         this.buffer = news ? news : this.articlesNews;
+    //             
 
+    //         for (let item of this.buffer){
+
+    //            (item.source) && (item.name = item.source.name);
+
+    //            item.source && (delete item.source);
+    //            item.author !== undefined && (delete item.author);
+    //            item.content !== undefined && (delete item.content);
+
+    //         }
+
+    //         let filterNews =  this.articlesNews.filter( (item,i) =>{
+
+    //         let its = this.buffer.find(it => it.description === item.description);
+
+    //         return  its === undefined;
+    //         });
+
+    //         if (filterNews.length) {
+                
+    //             filterNews.forEach(element => this.buffer.unshift(element));
+    //             console.log(filterNews);
+    //         }
+
+    //         let findItem = this.buffer || this.articlesNews;
+
+    //         this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
+
+
+    //         let trans = db.result.transaction('news','readwrite');
+
+    //         for (let i = 0; i < this.correctUTF.length; i++ ){
+    //             
+    //             trans.objectStore('news').put(this.correctUTF[i],i+1);
+    //         }
+
+    //     }
+
+    //     })
+
+
+    //     .catch((err) => { console.log(err); });
+    // }
+
+    }
 }
 
 
@@ -412,7 +477,7 @@ class ViewNews {
 
     }
 
-    showNews(){
+    showNews(db = []){
 
         this.content.innerHTML = '';
         this.newsSection = [];
@@ -423,9 +488,9 @@ class ViewNews {
             this.lengthLoading = 0;
             this.showLoadingButton();
         }
-
-        localStorage.news ? this.news = JSON.parse(localStorage.news) : this.news = [];
-
+        
+        this.news = db;
+        
 
 
         let countArticle = Math.ceil(this.countShow / 3);
@@ -491,7 +556,7 @@ class ViewNews {
         (pages.currentState === 'contact') && this.showContact();
         if (pages.currentState === 'main' || '') {
             
-            this.showNews();
+            this.showNews(this.news);
 
         }
     }
@@ -654,14 +719,6 @@ class Controller {
             };
 
 
-            let trans = db.transaction('news').objectStore('news').getAll();
-
-                trans.onsuccess = function(e){
-
-                    console.log(trans.result);
-
-                    
-                }
         
         };
     }
@@ -778,9 +835,9 @@ let app = (function(){
         controll.setEvents(view,news,pages);
         view.showComponents();
         view.showLoader();
-        const db = new DataBase(news.parseJsonNews());
-        let dateBase = db.openDateBase();
-        const have = news.request(view,pages,dateBase);
+
+        const db = new DataBase(news.articlesNews);
+        const have = news.request(view,pages,db);
 
         if (have === false) {
 
@@ -788,7 +845,7 @@ let app = (function(){
             view.updateBroswer();
         }
 
-        controll.setDbEvents(dateBase,db.storeData);
+        // controll.setDbEvents(dateBase,db.storeData);
 
     }
 

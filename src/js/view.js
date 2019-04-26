@@ -191,7 +191,7 @@ class ViewNews {
 
     }
 
-    showNews(){
+    showNews(db = []){
 
         this.content.innerHTML = '';
         this.newsSection = [];
@@ -202,9 +202,9 @@ class ViewNews {
             this.lengthLoading = 0;
             this.showLoadingButton();
         }
-
-        localStorage.news ? this.news = JSON.parse(localStorage.news) : this.news = [];
-
+        
+        this.news = db;
+        
 
 
         let countArticle = Math.ceil(this.countShow / 3);
@@ -270,7 +270,7 @@ class ViewNews {
         (pages.currentState === 'contact') && this.showContact();
         if (pages.currentState === 'main' || '') {
             
-            this.showNews();
+            this.showNews(this.news);
 
         }
     }
