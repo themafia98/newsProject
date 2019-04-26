@@ -39,9 +39,9 @@ class News {
     }
 
     getCoords(){
-        
 
-          function error(err) {
+
+        function error(err) {
 
             let coords ={
                 latitude: 53.9130256,
@@ -50,12 +50,12 @@ class News {
             }
 
             localStorage.coords = JSON.stringify(coords);
-          };
+        };
 
 
         navigator.geolocation.getCurrentPosition(function success(pos) {
             let response = pos.coords;
-            
+
             let coords ={
                 latitude: response.latitude,
                 longitude: response.longitude,
@@ -65,53 +65,50 @@ class News {
 
             localStorage.coords = JSON.stringify(coords);
         },error);
-
-
     }
 
     static mapInit(mapIn = document.querySelector('.ol-viewport')){
 
         if (!mapIn){
 
-        let mousePositionControl = new ol.control.MousePosition( {
-            // используется градусная проекция
-            projection: 'EPSG:4326',
-            // переопределяем функцию вывода координат
-            coordinateFormat: function(coordinate) {
-                // сначала широта, потом долгота и ограничиваем до 3 знаков после запятой
-                return ol.coordinate.format(coordinate, '{y}, {x}', 3);
-            }
-    } );
+            let mousePositionControl = new ol.control.MousePosition({
+                // используется градусная проекция
+                projection: 'EPSG:4326',
+                // переопределяем функцию вывода координат
+                coordinateFormat: function(coordinate) {
+                    // сначала широта, потом долгота и ограничиваем до 3 знаков после запятой
+                    return ol.coordinate.format(coordinate, '{y}, {x}', 3);
+                }
+            });
 
-        return new ol.Map({
-            controls: ol.control.defaults().extend([
-                new ol.control.ZoomSlider(),
-                mousePositionControl,
-                new ol.control.OverviewMap(),
-                new ol.control.ScaleLine()
-            ]),
-            target: 'map',
-            layers: [
-                new ol.layer.Tile({
+            return new ol.Map({
+                controls: ol.control.defaults().extend([
+                    new ol.control.ZoomSlider(),
+                    mousePositionControl,
+                    new ol.control.OverviewMap(),
+                    new ol.control.ScaleLine()
+                ]),
+                target: 'map',
+                layers: [
+                    new ol.layer.Tile({
 
-                    source: new ol.source.OSM()
+                        source: new ol.source.OSM()
 
+                    })
+                ],
+                view: new ol.View({
+                center: ol.proj.fromLonLat([27.4998984,53.9130256]),
+                zoom: 7
                 })
-            ],
-            view: new ol.View({
-            center: ol.proj.fromLonLat([27.4998984,53.9130256]),
-            zoom: 7
-            })
-        });
+            });
 
         }
-
     }
 
     request(view,pages,db){
 
         if (!window.fetch) return false;
-        
+
         window.fetch(`${this.URI+this.type}?${this.country}&category=${this.CATEGORY}&apiKey=${this.KEY}`)
 
         .then(response => response.json())
@@ -128,22 +125,12 @@ class News {
         });
 }
 
-
-    parseJsonNews(article = sessionStorage.news){
-
-        return article ? JSON.parse(article) : false;
-    }
-
-    stringifyNews(article){
-
-        sessionStorage.news = JSON.stringify(article);
-    }
 }
 
 
 class DataBase {
 
-    constructor(data = []){
+    constructor(){
         this.storeData = [];
         this.requestArticle = [];
         this.dbItems = null;
@@ -151,135 +138,80 @@ class DataBase {
 
     openDateBase(view,pages,storeData){
 
-        let self = this;
 
         this.requestArticle = JSON.parse(sessionStorage.news);
 
         if (!window.indexedDB) return;
 
         const dbPromise = window.indexedDB.open('newsDB',1);
-        dbPromise.onupgradeneeded = function(event) {
-            
+
+        dbPromise.onupgradeneeded = (e) => {
+
+            this.storeData = JSON.parse(sessionStorage.news);
             const db = event.target.result;
             let objectStore = db.createObjectStore("news", {autoIncrement:true});
 
-            // Create an index to search customers by name. We may have duplicates
-            // so we can't use a unique index.
             objectStore.createIndex("name",'name', { unique: false });
 
             // Store values in the newly created objectStore.
 
-            for (let i = 0; i < self.storeData.length; i++){
-
-                objectStore.add(self.storeData[i]);
-            }
+            this.storeData.forEach((item) => objectStore.add(item));
 
         };
 
         dbPromise.onsuccess = (e) => { 
-            
+
             const db = e.target.result;
 
             this.dbItems = db.transaction('news').objectStore('news').getAll();
-        
+
             this.dbItems.onsuccess = (e) => {
+
                 const news = e.target.result;
-    
-                         this.correctUTF = [];
-                         
-                        this.buffer = news.length ? news : this.requestArticle;
-                            
-            
-                        for (let item of this.buffer){
 
-                            (item.source) && (item.name = item.source.name);
-                            item.source && (delete item.source);
-                            item.author !== undefined && (delete item.author);
-                            item.content !== undefined && (delete item.content);
-                        }
-                        
-                        let filterNews =  this.requestArticle.filter( (item,i) =>{
-                        let its = this.buffer.find(it => it.description === item.description);
-                        return  its === undefined;
-                        });
-                        
-                        if (filterNews.length) {
-                            filterNews.forEach(element => this.buffer.unshift(element));
-                            console.log(filterNews);
-                        }
-                        
-                        let findItem = this.buffer || this.requestArticle;
+                this.correctUTF = [];
+                this.buffer = news.length ? news : this.requestArticle;
 
-                        this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
+                for (let item of this.buffer){
 
-                        let trans = db.transaction('news','readwrite');
-            
-                        for (let i = 0; i < this.correctUTF.length; i++ ){
-                            
-                            trans.objectStore('news').put(this.correctUTF[i],i+1);
-                        }
+                    (item.source) && (item.name = item.source.name);
+                    item.source && (delete item.source);
+                    item.author !== undefined && (delete item.author);
+                    item.content !== undefined && (delete item.content);
+                }
 
-                    sessionStorage.removeItem('news');
-  
-                    sessionStorage.state = window.location.hash.slice(2);
-                    pages.currentState = sessionStorage.state;
-                    view.showNews(news);
-                    view.checkState(pages);
-                    view.customElements(document.querySelector('.loader'),'delete');
+                let filterNews =  this.requestArticle.filter( (item,i) =>{
 
-    }
+                    let its = this.buffer.find(it => it.description === item.description);
+                    return  its === undefined;
+                });
+
+                if (filterNews.length) {
+                    filterNews.forEach(element => this.buffer.unshift(element));
+                }
+
+                let findItem = this.buffer || this.requestArticle;
+
+                this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
+
+                let trans = db.transaction('news','readwrite');
+
+                for (let i = 0; i < this.correctUTF.length; i++ ){
+
+                    trans.objectStore('news').put(this.correctUTF[i],i+1);
+                }
+
+                sessionStorage.removeItem('news');
+
+                sessionStorage.state = window.location.hash.slice(2);
+                pages.currentState = sessionStorage.state;
+
+                view.showNews(news);
+                view.checkState(pages);
+                view.customElements(document.querySelector('.loader'),'delete');
+            }
 
         }
-    // .then(db => {  console.log(db);  /* db.result.transaction('news').objectStore('news').getAll() */ })
-    //     .then(news => {
-    //         
-    //         news.onsuccess = (e) => {
-    //          this.correctUTF = [];
-    //         this.buffer = news ? news : this.articlesNews;
-    //             
-
-    //         for (let item of this.buffer){
-
-    //            (item.source) && (item.name = item.source.name);
-
-    //            item.source && (delete item.source);
-    //            item.author !== undefined && (delete item.author);
-    //            item.content !== undefined && (delete item.content);
-
-    //         }
-
-    //         let filterNews =  this.articlesNews.filter( (item,i) =>{
-
-    //         let its = this.buffer.find(it => it.description === item.description);
-
-    //         return  its === undefined;
-    //         });
-
-    //         if (filterNews.length) {
-                
-    //             filterNews.forEach(element => this.buffer.unshift(element));
-    //             console.log(filterNews);
-    //         }
-
-    //         let findItem = this.buffer || this.articlesNews;
-
-    //         this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
-
-
-    //         let trans = db.result.transaction('news','readwrite');
-
-    //         for (let i = 0; i < this.correctUTF.length; i++ ){
-    //             
-    //             trans.objectStore('news').put(this.correctUTF[i],i+1);
-    //         }
-
-    //     }
-
-    //     })
-
-
-    //     .catch((err) => { console.log(err); });
-    // }
 
     }
 }
@@ -789,13 +721,13 @@ class Controller {
 
         document.addEventListener('DOMContentLoaded',() => {
 
-            let article = model.parseJsonNews();
+            // let article = model.parseJsonNews();
 
-            if (article.length > 35){
+            // if (article.length > 35){
 
-                while (article.length > 37) article.pop();
-                model.stringifyNews(article);
-            }
+            //     while (article.length > 37) article.pop();
+            //     model.stringifyNews(article);
+            // }
 
 
 
@@ -827,18 +759,19 @@ let app = (function(){
 
         const pages = new Pages();
         const news = new News();
+        const db = new DataBase();
 
         news.getCoords();
 
         const view = new ViewNews(document.getElementById('newsApp'));
         const controll = new Controller();
+
         controll.setEvents(view,news,pages);
         view.showComponents();
         view.showLoader();
 
-        const db = new DataBase(news.articlesNews);
         const have = news.request(view,pages,db);
-
+        
         if (have === false) {
 
             view.customElements(document.querySelector('.loader'),'delete');

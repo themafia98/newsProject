@@ -120,13 +120,13 @@ class Controller {
 
         document.addEventListener('DOMContentLoaded',() => {
 
-            let article = model.parseJsonNews();
+            // let article = model.parseJsonNews();
 
-            if (article.length > 35){
+            // if (article.length > 35){
 
-                while (article.length > 37) article.pop();
-                model.stringifyNews(article);
-            }
+            //     while (article.length > 37) article.pop();
+            //     model.stringifyNews(article);
+            // }
 
 
 
