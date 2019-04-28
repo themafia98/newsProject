@@ -164,10 +164,24 @@ class DataBase {
             const db = e.target.result;
 
             this.dbItems = db.transaction('news').objectStore('news').getAll();
-
+            
             this.dbItems.onsuccess = (e) => {
 
+
+                let data = db.transaction('news','readwrite').objectStore('news');
+
+                if(this.dbItems.result.length >= 54){
+
+                    let i = this.dbItems.result.length-1;
+                    while(this.dbItems.result.length > 54){
+                        data.delete(i);
+                        i--;
+                    }
+                }
+                
+
                 const news = e.target.result;
+
 
                 this.correctUTF = [];
                 this.buffer = news.length ? news : this.requestArticle;
@@ -195,13 +209,13 @@ class DataBase {
                 this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
 
                 let trans = db.transaction('news','readwrite');
-
                 for (let i = 0; i < this.correctUTF.length; i++ ){
 
                     trans.objectStore('news').put(this.correctUTF[i],i+1);
                 }
 
                 sessionStorage.removeItem('news');
+                sessionStorage.itemCount = this.correctUTF.length-1;
 
                 sessionStorage.state = window.location.hash.slice(2);
                 pages.currentState = sessionStorage.state;
@@ -269,38 +283,47 @@ class ViewNews {
     }
 
     customElements(target,type = 'none',name = 'Спрятать') {
-        
 
-        type === 'disabled' && target.setAttribute('disabled','true');
-        type === 'delete' && target.parentNode.removeChild(target);
-        type === 'rename' && (target.value = name);
+        if (target) {
+            type === 'disabled' && target.setAttribute('disabled','true');
+            type === 'delete' && target.parentNode.removeChild(target);
+            type === 'rename' && (target.value = name);
+        }
 
     }
 
-    loadingNews(target = false){
-
-
-            let lastSection = document.getElementsByTagName('section');
+    async loadingNews(target = false){
+        debugger;
+   
+            let lastSection = [...document.getElementsByTagName('section')];
             let contentSection = document.querySelector('.content');
+            let items = [];
+
+            lastSection.forEach(item => items.push(...item.children));
+
+
             lastSection = lastSection[lastSection.length-1];
             let num = this.newsSection.length-1;
-            this.newContent = this.news.filter( (element,i) => i > this.numContent);
+            this.newContent = this.news.filter( (item,i) => i > items.length-1);
+
+            this.countShow = this.countShow > this.newContent.length ? this.newContent.length : 17;
 
             let countArticle = Math.ceil(this.countShow / 3);
+
 
             for(let j = 0; j < countArticle; j++){
                 let section = document.createElement('section');
                 this.newsSection.push(section);
             }
-;
-            this.lengthLoading = this.newContent.length > this.countShow ? this.countShow-1 : this.newContent.length;
+
+            this.lengthLoading = this.newContent.length > this.countShow ? this.countShow : this.newContent.length;
 
             for(let i = 0; i < this.lengthLoading; i++){
-
+                debugger;
                 let read = document.createElement('a');
                 let article = document.createElement('div');
                 let img = document.createElement('img');
-                console.log(this.newContent[i].urlToImage);
+
                 img.src = this.newContent[i].urlToImage  ? this.newContent[i].urlToImage : 'img/technology.jpg';
                 img.classList.add('topic-image');
                 let content = document.createElement('p');
@@ -310,28 +333,35 @@ class ViewNews {
                 article.classList.add('rel-col');
 
                 read.href = this.newContent[i].url;
+                read.setAttribute('target','_blank');
                 read.classList.add('article__content__read');
 
 
-                content.innerHTML = this.newContent[i].description != null ? this.newContent[i].description : this.newContent[i].title;
+                content.innerHTML = (this.newContent[i].description != '' && this.newContent[i].description != null) ?
+                                    this.newContent[i].description : this.newContent[i].title;
 
                 article.appendChild(img);
                 article.appendChild(content);
                 article.appendChild(read);
+                debugger;
                 this.newsSection[num].appendChild(article);
 
-                if ((i % 3 === 0) || i === 0) num++;
+                if (this.newsSection[num].children.length >= 3) num++;
 
                 }
+                debugger;
+                for (let ij = 7; ij < this.newsSection.length; ij++){
 
-            for (let ij = 7; ij < this.newsSection.length-1; ij++){
-
-                let parent = target.parentNode;
-                contentSection.insertBefore(this.newsSection[ij],parent);
-
-            }
+                    let parent = target.parentNode;
+                    contentSection.insertBefore(this.newsSection[ij],parent);
+                }
 
             this.numContent = this.numContent+18;
+
+            if (this.numContent >= 54){
+                this.customElements(document.querySelector('.loadingNewsBtn'),'delete');
+                return;
+           }
     }
 
 
@@ -413,17 +443,10 @@ class ViewNews {
 
         this.content.innerHTML = '';
         this.newsSection = [];
-
-        if (this.lengthLoading >= 18){
-
-            this.numContent = 18;
-            this.lengthLoading = 0;
-            this.showLoadingButton();
-        }
-        
         this.news = db;
-        
 
+        this.showLoadingButton();
+        this.countShow = 18;
 
         let countArticle = Math.ceil(this.countShow / 3);
         let num = 0;
@@ -453,6 +476,7 @@ class ViewNews {
             if (i === 0) {
                 read.href = this.news[i].url;
                 read.classList.add('hot-article__content__read');
+                read.setAttribute('target','_blank');
                 read.innerHTML = 'Читать';
                 this.newsSection[i].classList.add('hot-topic');
                 content.classList.add('hot-topic_content');
@@ -460,6 +484,7 @@ class ViewNews {
             } else {
 
                 read.href = this.news[i].url;
+                read.setAttribute('target','_blank');
                 read.classList.add('article__content__read');
             }
 
@@ -487,7 +512,7 @@ class ViewNews {
         (pages.currentState === 'about') && this.showAbout();
         (pages.currentState === 'contact') && this.showContact();
         if (pages.currentState === 'main' || '') {
-            
+                debugger;
             this.showNews(this.news);
 
         }
@@ -643,6 +668,8 @@ class Controller {
 
             let objectStore = db.transaction(["news"], "readwrite");
             const store = objectStore.objectStore("news");
+            debugger;
+
 
             store.openCursor().onsuccess = function(event) {
                 let cursor = event.target.result;
@@ -670,7 +697,7 @@ class Controller {
                 clearInterval(self.timer);
                 self.clickScrollCount = 0;
             };
-            console.log(self.scrolled);
+
             if (self.scrolled > 100) {
 
                 self.menu.classList.add('fixed-menu');
@@ -693,8 +720,8 @@ class Controller {
 
             if (target.classList[0] === 'loadingNewsBtn'){
 
-            view.numContent < 36 && view.loadingNews(target);
-            view.numContent >= 36 && view.customElements(target,'delete');
+            view.loadingNews(target);
+            // view.numContent >= 36 && view.customElements(target,'delete');
             }
 
             if((target.classList[0] === 'scroll' || target.parentNode.classList[0] === 'scroll') && 
@@ -721,13 +748,7 @@ class Controller {
 
         document.addEventListener('DOMContentLoaded',() => {
 
-            // let article = model.parseJsonNews();
 
-            // if (article.length > 35){
-
-            //     while (article.length > 37) article.pop();
-            //     model.stringifyNews(article);
-            // }
 
 
 

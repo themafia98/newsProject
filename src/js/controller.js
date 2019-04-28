@@ -42,6 +42,8 @@ class Controller {
 
             let objectStore = db.transaction(["news"], "readwrite");
             const store = objectStore.objectStore("news");
+            debugger;
+
 
             store.openCursor().onsuccess = function(event) {
                 let cursor = event.target.result;
@@ -69,7 +71,7 @@ class Controller {
                 clearInterval(self.timer);
                 self.clickScrollCount = 0;
             };
-            console.log(self.scrolled);
+
             if (self.scrolled > 100) {
 
                 self.menu.classList.add('fixed-menu');
@@ -92,8 +94,8 @@ class Controller {
 
             if (target.classList[0] === 'loadingNewsBtn'){
 
-            view.numContent < 36 && view.loadingNews(target);
-            view.numContent >= 36 && view.customElements(target,'delete');
+            view.loadingNews(target);
+            // view.numContent >= 36 && view.customElements(target,'delete');
             }
 
             if((target.classList[0] === 'scroll' || target.parentNode.classList[0] === 'scroll') && 
@@ -120,13 +122,7 @@ class Controller {
 
         document.addEventListener('DOMContentLoaded',() => {
 
-            // let article = model.parseJsonNews();
 
-            // if (article.length > 35){
-
-            //     while (article.length > 37) article.pop();
-            //     model.stringifyNews(article);
-            // }
 
 
 

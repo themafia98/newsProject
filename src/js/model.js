@@ -161,10 +161,24 @@ class DataBase {
             const db = e.target.result;
 
             this.dbItems = db.transaction('news').objectStore('news').getAll();
-
+            
             this.dbItems.onsuccess = (e) => {
 
+
+                let data = db.transaction('news','readwrite').objectStore('news');
+
+                if(this.dbItems.result.length >= 54){
+
+                    let i = this.dbItems.result.length-1;
+                    while(this.dbItems.result.length > 54){
+                        data.delete(i);
+                        i--;
+                    }
+                }
+                
+
                 const news = e.target.result;
+
 
                 this.correctUTF = [];
                 this.buffer = news.length ? news : this.requestArticle;
@@ -192,13 +206,13 @@ class DataBase {
                 this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
 
                 let trans = db.transaction('news','readwrite');
-
                 for (let i = 0; i < this.correctUTF.length; i++ ){
 
                     trans.objectStore('news').put(this.correctUTF[i],i+1);
                 }
 
                 sessionStorage.removeItem('news');
+                sessionStorage.itemCount = this.correctUTF.length-1;
 
                 sessionStorage.state = window.location.hash.slice(2);
                 pages.currentState = sessionStorage.state;
