@@ -14,10 +14,8 @@ class Controller {
     setDbEvents(dateNews,storeData){
 
         dateNews.onupgradeneeded = function(event) {
-            
 
             const db = event.target.result;
-
             // Create an objectStore to hold information about our customers. We're
             // going to use "id" as our key path because it's guaranteed to be
             // unique.
@@ -33,26 +31,19 @@ class Controller {
 
                 objectStore.add(storeData[i]);
             }
-
         };
 
         dateNews.onsuccess = function(event) { //если база открылась и все в порядке
-            
-            const db = event.target.result;
 
+            const db = event.target.result;
             let objectStore = db.transaction(["news"], "readwrite");
             const store = objectStore.objectStore("news");
-            debugger;
-
 
             store.openCursor().onsuccess = function(event) {
                 let cursor = event.target.result;
 
                 if (cursor) cursor.continue();
             };
-
-
-        
         };
     }
 
@@ -83,22 +74,16 @@ class Controller {
                 self.menu.classList.toggle('fixed-menu');
                 scroll && scroll.parentNode.removeChild(scroll); // || remove()
             }
-
         };
 
-
-        
         function clickEvent(e) {
-            
+
             let target = e.target;
 
-            if (target.classList[0] === 'loadingNewsBtn'){
+            if (target.classList[0] === 'loadingNewsBtn'){ view.loadingNews(target); return; };
 
-            view.loadingNews(target);
-            // view.numContent >= 36 && view.customElements(target,'delete');
-            }
 
-            if((target.classList[0] === 'scroll' || target.parentNode.classList[0] === 'scroll') && 
+            if((target.parentNode.classList[0] === 'scroll' || target.classList[0] === 'scroll') && 
                 self.clickScrollCount === 0){
 
                 self.clickScrollCount++;
@@ -106,10 +91,7 @@ class Controller {
                 document.documentElement.scrollTop = document.documentElement.scrollTop - 20;
                 },0);
             }
-
         };
-
-
 
         /* -----------Modernizr----------- */
         console.log('touchevents detected:' + Modernizr.touchevents);
@@ -119,12 +101,12 @@ class Controller {
         window.addEventListener('storage', (e) => {  view.showNews() },false);
         document.addEventListener('scroll',scroll,false);
 
-
         document.addEventListener('DOMContentLoaded',() => {
 
-
-
-
+            if (window.location.hash.slice(2) === 'main') {
+                
+                window.location.hash = '';
+            }
 
         },false);
 
@@ -135,10 +117,8 @@ class Controller {
 
             sessionStorage.state = window.location.hash.slice(2);
             pages.currentState = sessionStorage.state;
-
             view.checkState(pages);
         }
-
     }
 }
 

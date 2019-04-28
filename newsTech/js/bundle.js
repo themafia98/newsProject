@@ -134,6 +134,7 @@ class DataBase {
         this.storeData = [];
         this.requestArticle = [];
         this.dbItems = null;
+        this.itemCountDB = null;
     }
 
     openDateBase(view,pages,storeData){
@@ -164,11 +165,13 @@ class DataBase {
             const db = e.target.result;
 
             this.dbItems = db.transaction('news').objectStore('news').getAll();
+        
             
             this.dbItems.onsuccess = (e) => {
 
-
                 let data = db.transaction('news','readwrite').objectStore('news');
+                this.itemCountDB = this.dbItems.result.length-1;
+
 
                 if(this.dbItems.result.length >= 54){
 
@@ -219,7 +222,8 @@ class DataBase {
 
                 sessionStorage.state = window.location.hash.slice(2);
                 pages.currentState = sessionStorage.state;
-
+                
+                view.itemCountDB = this.itemCountDB;
                 view.showNews(news);
                 view.checkState(pages);
                 view.customElements(document.querySelector('.loader'),'delete');
@@ -240,10 +244,10 @@ class ViewNews {
         this.news = localStorage.news ? JSON.parse(localStorage.news) : [];
         this.newsSection = [];
         this.count = 6;
-        this.numPage = 1;
         this.countShow = 18;
-        this.numContent = 18; // start
         this.lengthLoading = 0;
+        this.items = [];
+        this.itemCountDB = null;
 
 
         this.components = {
@@ -293,72 +297,75 @@ class ViewNews {
     }
 
     async loadingNews(target = false){
-        debugger;
-   
+            
+        
             let lastSection = [...document.getElementsByTagName('section')];
             let contentSection = document.querySelector('.content');
-            let items = [];
-
-            lastSection.forEach(item => items.push(...item.children));
-
-
-            lastSection = lastSection[lastSection.length-1];
             let num = this.newsSection.length-1;
-            this.newContent = this.news.filter( (item,i) => i > items.length-1);
+            this.items = [];
 
-            this.countShow = this.countShow > this.newContent.length ? this.newContent.length : 17;
+            lastSection.forEach(item => this.items.push(...item.children));
+            this.newContent = this.news.filter( (item,i) => i > this.items.length-1);
 
-            let countArticle = Math.ceil(this.countShow / 3);
+            if (this.newContent.length){
 
+                this.countShow = this.countShow > this.newContent.length ? this.newContent.length : 17;
 
-            for(let j = 0; j < countArticle; j++){
-                let section = document.createElement('section');
-                this.newsSection.push(section);
-            }
-
-            this.lengthLoading = this.newContent.length > this.countShow ? this.countShow : this.newContent.length;
-
-            for(let i = 0; i < this.lengthLoading; i++){
-                debugger;
-                let read = document.createElement('a');
-                let article = document.createElement('div');
-                let img = document.createElement('img');
-
-                img.src = this.newContent[i].urlToImage  ? this.newContent[i].urlToImage : 'img/technology.jpg';
-                img.classList.add('topic-image');
-                let content = document.createElement('p');
-
-                content.classList.add('article__content');
-                article.classList.add('article-col');
-                article.classList.add('rel-col');
-
-                read.href = this.newContent[i].url;
-                read.setAttribute('target','_blank');
-                read.classList.add('article__content__read');
+                let countArticle = Math.ceil(this.countShow / 3);
 
 
-                content.innerHTML = (this.newContent[i].description != '' && this.newContent[i].description != null) ?
-                                    this.newContent[i].description : this.newContent[i].title;
-
-                article.appendChild(img);
-                article.appendChild(content);
-                article.appendChild(read);
-                debugger;
-                this.newsSection[num].appendChild(article);
-
-                if (this.newsSection[num].children.length >= 3) num++;
-
-                }
-                debugger;
-                for (let ij = 7; ij < this.newsSection.length; ij++){
-
-                    let parent = target.parentNode;
-                    contentSection.insertBefore(this.newsSection[ij],parent);
+                for(let j = 0; j < countArticle; j++){
+                    let section = document.createElement('section');
+                    this.newsSection.push(section);
                 }
 
-            this.numContent = this.numContent+18;
+                this.lengthLoading = this.newContent.length > this.countShow ? this.countShow : this.newContent.length;
 
-            if (this.numContent >= 54){
+                for(let i = 0; i < this.lengthLoading; i++){
+                    
+                    let read = document.createElement('a');
+                    let article = document.createElement('div');
+                    let img = document.createElement('img');
+
+                    img.src = this.newContent[i].urlToImage  ? this.newContent[i].urlToImage : 'img/technology.jpg';
+                    img.classList.add('topic-image');
+                    let content = document.createElement('p');
+
+                    content.classList.add('article__content');
+                    article.classList.add('article-col');
+                    article.classList.add('rel-col');
+
+                    read.href = this.newContent[i].url;
+                    read.setAttribute('target','_blank');
+                    read.classList.add('article__content__read');
+
+
+                    content.innerHTML = (this.newContent[i].description != '' && this.newContent[i].description != null) ?
+                                        this.newContent[i].description : this.newContent[i].title;
+
+                    article.appendChild(img);
+                    article.appendChild(content);
+                    article.appendChild(read);
+                    
+                    this.newsSection[num].appendChild(article);
+
+                    if (this.newsSection[num].children.length >= 3) num++;
+
+                    }
+                    
+                    for (let ij = 7; ij < this.newsSection.length; ij++){
+
+                        let parent = target.parentNode;
+                        contentSection.insertBefore(this.newsSection[ij],parent);
+                    }
+                    this.items = [];
+                    
+                    this.items = document.querySelectorAll('div.article-col').length-1;
+
+                    if (this.items === this.itemCountDB)
+                    this.customElements(document.querySelector('.loadingNewsBtn'),'delete');
+
+            } else {
                 this.customElements(document.querySelector('.loadingNewsBtn'),'delete');
                 return;
            }
@@ -440,13 +447,18 @@ class ViewNews {
     }
 
     showNews(db = []){
-
+        
         this.content.innerHTML = '';
+        this.items = document.querySelectorAll('div.article-col').length-1;
         this.newsSection = [];
+        this.countShow = 18;
         this.news = db;
 
-        this.showLoadingButton();
-        this.countShow = 18;
+        if (this.items === this.itemCountDB) {
+
+            this.customElements(document.querySelector('.loadingNewsBtn'),'delete');
+        } else this.showLoadingButton();
+
 
         let countArticle = Math.ceil(this.countShow / 3);
         let num = 0;
@@ -511,11 +523,9 @@ class ViewNews {
 
         (pages.currentState === 'about') && this.showAbout();
         (pages.currentState === 'contact') && this.showContact();
-        if (pages.currentState === 'main' || '') {
-                debugger;
-            this.showNews(this.news);
+        (pages.currentState === 'main' || '')  && (this.showNews(this.news));
 
-        }
+    
     }
 
     showAbout() {
@@ -640,10 +650,8 @@ class Controller {
     setDbEvents(dateNews,storeData){
 
         dateNews.onupgradeneeded = function(event) {
-            
 
             const db = event.target.result;
-
             // Create an objectStore to hold information about our customers. We're
             // going to use "id" as our key path because it's guaranteed to be
             // unique.
@@ -659,26 +667,19 @@ class Controller {
 
                 objectStore.add(storeData[i]);
             }
-
         };
 
         dateNews.onsuccess = function(event) { //если база открылась и все в порядке
-            
-            const db = event.target.result;
 
+            const db = event.target.result;
             let objectStore = db.transaction(["news"], "readwrite");
             const store = objectStore.objectStore("news");
-            debugger;
-
 
             store.openCursor().onsuccess = function(event) {
                 let cursor = event.target.result;
 
                 if (cursor) cursor.continue();
             };
-
-
-        
         };
     }
 
@@ -709,22 +710,16 @@ class Controller {
                 self.menu.classList.toggle('fixed-menu');
                 scroll && scroll.parentNode.removeChild(scroll); // || remove()
             }
-
         };
 
-
-        
         function clickEvent(e) {
-            
+
             let target = e.target;
 
-            if (target.classList[0] === 'loadingNewsBtn'){
+            if (target.classList[0] === 'loadingNewsBtn'){ view.loadingNews(target); return; };
 
-            view.loadingNews(target);
-            // view.numContent >= 36 && view.customElements(target,'delete');
-            }
 
-            if((target.classList[0] === 'scroll' || target.parentNode.classList[0] === 'scroll') && 
+            if((target.parentNode.classList[0] === 'scroll' || target.classList[0] === 'scroll') && 
                 self.clickScrollCount === 0){
 
                 self.clickScrollCount++;
@@ -732,10 +727,7 @@ class Controller {
                 document.documentElement.scrollTop = document.documentElement.scrollTop - 20;
                 },0);
             }
-
         };
-
-
 
         /* -----------Modernizr----------- */
         console.log('touchevents detected:' + Modernizr.touchevents);
@@ -745,12 +737,12 @@ class Controller {
         window.addEventListener('storage', (e) => {  view.showNews() },false);
         document.addEventListener('scroll',scroll,false);
 
-
         document.addEventListener('DOMContentLoaded',() => {
 
-
-
-
+            if (window.location.hash.slice(2) === 'main') {
+                
+                window.location.hash = '';
+            }
 
         },false);
 
@@ -761,10 +753,8 @@ class Controller {
 
             sessionStorage.state = window.location.hash.slice(2);
             pages.currentState = sessionStorage.state;
-
             view.checkState(pages);
         }
-
     }
 }
 

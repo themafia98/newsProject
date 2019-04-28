@@ -131,6 +131,7 @@ class DataBase {
         this.storeData = [];
         this.requestArticle = [];
         this.dbItems = null;
+        this.itemCountDB = null;
     }
 
     openDateBase(view,pages,storeData){
@@ -161,11 +162,13 @@ class DataBase {
             const db = e.target.result;
 
             this.dbItems = db.transaction('news').objectStore('news').getAll();
+        
             
             this.dbItems.onsuccess = (e) => {
 
-
                 let data = db.transaction('news','readwrite').objectStore('news');
+                this.itemCountDB = this.dbItems.result.length-1;
+
 
                 if(this.dbItems.result.length >= 54){
 
@@ -216,7 +219,8 @@ class DataBase {
 
                 sessionStorage.state = window.location.hash.slice(2);
                 pages.currentState = sessionStorage.state;
-
+                
+                view.itemCountDB = this.itemCountDB;
                 view.showNews(news);
                 view.checkState(pages);
                 view.customElements(document.querySelector('.loader'),'delete');
