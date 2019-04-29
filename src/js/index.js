@@ -5,7 +5,7 @@ let app = (function(){
 
 
     function main(){
-
+        
         const pages = new Pages();
         const news = new News();
         const db = new DataBase();
@@ -35,3 +35,4 @@ let app = (function(){
 })();
 
 app.init();
+
