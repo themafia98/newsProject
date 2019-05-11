@@ -7,7 +7,7 @@
     "clear": "del-cli public",
     "dev-server": "webpack-dev-server",
     "start": "webpack --mode development --open",
-    "full": "del-cli public && webpack --mode production && html public/*.html --indent-size 2"
+    "full": "del-cli ./public && webpack --mode production && html public/*.html --indent-size 2"
   },
   "repository": {
     "type": "git",

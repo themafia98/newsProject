@@ -1,4 +1,4 @@
-
+import {News} from './model';
 export default class ViewNews {
 
     constructor(ctx = document.createElement('div')){
@@ -211,7 +211,7 @@ export default class ViewNews {
     }
 
     showNews(db = []){
-        
+ 
         this.content.innerHTML = '';
         this.items = document.querySelectorAll('div.article-col').length-1;
         this.newsSection = [];
@@ -263,23 +263,24 @@ export default class ViewNews {
                 read.setAttribute('target','_blank');
                 read.classList.add('article__content__read');
             }
-
+   
             content.innerHTML = (this.news[i].description != '' && this.news[i].description != null) ? this.news[i].description : this.news[i].title;
             article.appendChild(img);
             article.appendChild(content);
             article.appendChild(read);
 
             if (this.lengthLoading > 0){
-
+     
                 !(this.newsSection[num]) && (this.newsSection[num] = document.createElement('section'));
             }
-
+       
             this.newsSection[num].appendChild(article);
             if (i % 3 === 0) num++;
         }
-
         this.newsSection.forEach (item => this.components.contentSection.appendChild(item));
+
         this.components.contentSection.appendChild(this.components.loadMoreBox);
+
         this.ctx.insertBefore(this.components.contentSection,this.components.header.nextSibling);
     }
 

@@ -155,10 +155,10 @@ if (!prod) {
             to: './style/lib'
         }]),
         // new webpack.HotModuleReplacementPlugin(),
-        new webpack.SourceMapDevToolPlugin({
-            filename: './js/bundle.webpack.js.map',
-            append: '\n//# sourceMappingURL=http://localhost:5500/[url]',
-        }),
+        // new webpack.SourceMapDevToolPlugin({
+        //     filename: './js/bundle.webpack.js.map',
+        //     append: '\n//# sourceMappingURL=http://localhost:5500/[url]',
+        // }),
         new HtmlWebpackPlugin({filename: './index.html', template: 'src/index.html'}),
         new extractWebpackPlugin({filename: './style/style.css', disable: false, allChunks: true}), // main css
         new webpack.DefinePlugin({
