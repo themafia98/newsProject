@@ -16,11 +16,11 @@ export default function main(){
     view.showComponents();
     view.showLoader();
 
-    debugger;
+    ;
     const have = news.request(view,pages,db);
 
     if (have === false) {
-debugger;
+;
         view.customElements(document.querySelector('.loader'),'delete');
         view.updateBroswer();
     }
