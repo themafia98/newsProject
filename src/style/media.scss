@@ -29,6 +29,9 @@
         section.hot-topic .article-col {
             flex: 0 0 85%;
         }
+        .article__content:not(.hot-topic_content) {
+            margin: 50px;
+        }
 
         section.hot-topic .article__content {
             width: 70%;
@@ -59,6 +62,10 @@
 
             width: 300px;
             height: 200px;
+        }
+
+        .article__content:not(.hot-topic_content) {
+            margin: 15px;
         }
     }
 }

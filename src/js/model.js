@@ -143,7 +143,6 @@ class DataBase {
         const dbPromise = window.indexedDB.open('newsDB',1);
 
         dbPromise.onupgradeneeded = (e) => {
-
             this.storeData = JSON.parse(sessionStorage.news);
             const db = event.target.result;
             let objectStore = db.createObjectStore("news", {autoIncrement:true});
@@ -153,31 +152,23 @@ class DataBase {
             // Store values in the newly created objectStore.
 
             this.storeData.forEach((item) => objectStore.add(item));
-
         };
 
         dbPromise.onsuccess = (e) => {
-
             const db = e.target.result;
 
             this.dbItems = db.transaction('news').objectStore('news').getAll();
 
             this.dbItems.onsuccess = (e) => {
-
                 let dbPromise = new Promise((resolve,reject) => {
                 let data = db.transaction('news','readwrite').objectStore('news');
                 // let store = data.objectStore('news');
                 data.oncomplete (resolve(data));
 
                 })
-
                 .then((data) => {
-
-
                     let promise = new Promise((resolve,reject) => {
-
                     data.openCursor().onsuccess = function logItems(e){
-
                         let cursor = e.target.result;
                         if (!cursor) {  return resolve('done'); }
 
@@ -190,46 +181,23 @@ class DataBase {
                 .then(result => db.transaction('news').objectStore('news').getAll())
 
                 .then(result => {
-
                 result.onsuccess = (e) => {
-
                     this.itemCountDB = this.dbItems.result.length-1;
                     const news = e.target.result;
-
-                    this.correctUTF = [];
                     this.buffer = news.length ? news : this.requestArticle;
 
-                    for (let item of this.buffer){
-
-                        (item.source) && (item.name = item.source.name);
-                        item.source && (delete item.source);
-                        item.author !== undefined && (delete item.author);
-                        item.content !== undefined && (delete item.content);
-                    }
-
-                    let filterNews =  this.requestArticle.filter( (item,i) =>{
-
-                        let its = this.buffer.find(it => it.description === item.description);
-                        return  its === undefined;
-                    });
-
-                    if (filterNews.length) {
-                        filterNews.forEach(element => this.buffer.unshift(element));
-                    }
-
-                    let findItem = this.buffer || this.requestArticle;
-
-                    this.correctUTF = findItem.filter (item => item.name != 'Rg.ru');
+                    let uniqueArray = array => [...new Set(array.map(item => JSON.stringify(item)))].map(s => JSON.parse(s));
+                    this.buffer = [...this.buffer,...this.requestArticle];
+                    this.finalStorage = uniqueArray(this.buffer);
 
                     let trans = db.transaction('news','readwrite');
-                    for (let i = 0; i < this.correctUTF.length; i++ ){
+                    for (let i = 0; i < this.finalStorage.length; i++ ){
 
-                        trans.objectStore('news').put(this.correctUTF[i],i+1);
+                        trans.objectStore('news').put(this.finalStorage[i],i+1);
                     }
 
                     sessionStorage.removeItem('news');
-                    sessionStorage.itemCount = this.correctUTF.length-1;
-
+                    sessionStorage.itemCount = this.finalStorage.length-1;
                     sessionStorage.state = window.location.hash.slice(2);
                     pages.currentState = sessionStorage.state;
 
