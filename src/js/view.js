@@ -1,5 +1,5 @@
 
-class ViewNews {
+export default class ViewNews {
 
     constructor(ctx = document.createElement('div')){
         this.ctx = ctx;
@@ -60,7 +60,7 @@ class ViewNews {
 
     }
 
-    async loadingNews(target = false){
+    loadingNews(target = false){
             
         
             let lastSection = [...document.getElementsByTagName('section')];

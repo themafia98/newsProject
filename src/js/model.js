@@ -167,7 +167,6 @@ class DataBase {
                 let dbPromise = new Promise((resolve,reject) => {
                 let data = db.transaction('news','readwrite').objectStore('news');
                 // let store = data.objectStore('news');
-                this.itemCountDB = this.dbItems.result.length-1;
                 data.oncomplete (resolve(data));
 
                 })
@@ -182,7 +181,6 @@ class DataBase {
                         let cursor = e.target.result;
                         if (!cursor) {  return resolve('done'); }
 
-                        console.log('cursor is at: ',cursor.key);
                         if (cursor.key > 54) cursor.delete();
 
                         cursor.continue();
@@ -195,6 +193,7 @@ class DataBase {
 
                 result.onsuccess = (e) => {
 
+                    this.itemCountDB = this.dbItems.result.length-1;
                     const news = e.target.result;
 
                     this.correctUTF = [];
@@ -247,3 +246,5 @@ class DataBase {
         }
     }
 }
+
+export {Pages, DataBase, News};
