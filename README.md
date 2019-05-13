@@ -1,4 +1,4 @@
-# Rhis test news SPA project
+# This is test news SPA project
 
 ### What i use?
 * News-API
