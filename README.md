@@ -4,3 +4,4 @@
 * News-API
 * ES6
 * Indexed DB
+* Session storage
